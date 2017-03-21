@@ -4,6 +4,7 @@ AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/connectbyname.c])
 AC_CONFIG_HEADERS([config.h])
 
+LT_INIT
 AC_PROG_CC
 
 AC_CHECK_LIB([getdns], [getdns_context_set_listen_addresses],,

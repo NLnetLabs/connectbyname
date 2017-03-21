@@ -117,7 +117,8 @@ struct cbn_policy {
 	 */
 	cbn_policy_setting  tls_dnssec_chain_extension	: 2;
 
-	int           _future_cbn_policy_settings	: 48;
+	int           _future_cbn_policy_settings	: 16;
+	int           _future_cbn_policy_settings2	: 32;
 	unsigned char _future_cbn_policy_data_settings[48];
 };
 
@@ -193,7 +194,7 @@ typedef enum cbn_dnssec_status {
 	cbn_BOGUS         =  1,
 	cbn_INSECURE      =  2,
 	cbn_INDETERMINATE =  3
-};
+} cbn_dnssec_status;
 
 struct cbn_connection {
 	const struct cbn_policy *policy;
@@ -213,7 +214,8 @@ struct cbn_connection {
 	int                      authenticated	:  1;
 	cbn_dnssec_status        dnssec_status	:  2;
 
-	int _future_cbn_connection_data		: 59;
+	int _future_cbn_connection_data		: 27;
+	int _future_cbn_connection_data2	: 32;
 };
 
 struct cbn_connection *cbn_connection_init2(struct cbn_connection *connection,
