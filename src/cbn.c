@@ -1,5 +1,5 @@
 /*
- * cbn-client.c - User program to test libconnectbyname functionality
+ * cbn.c - User program to test libconnectbyname functionality
  *
  * Copyright (c) 2017, NLnet Labs. All rights reserved.
  * 
@@ -39,7 +39,8 @@
 
 int main()
 {
-	printf("nothing yet, sorry...\n");
+	printf("sizeof(struct cbn_policy): %lu\n", sizeof(struct cbn_policy));
+	printf("sizeof(struct cbn): %lu\n", sizeof(struct cbn));
 	return 0;
 }
 

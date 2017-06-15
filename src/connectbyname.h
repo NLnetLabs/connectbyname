@@ -80,7 +80,7 @@ struct cbn_policy {
 	 * cbn_off           = Do not do DANE
 	 * cbn_opportunistic = On BOGUS TLSA lookup, fallback to PKIX,
 	 *                     but TLSA MUST be used when it is DNSSEC SECURE
-	 * cbn_strict        = On BOGUS TLSA lookup, fail the connection.
+	 * cbn_strict        = On BOGUS TLSA lookup, fail the conn.
 	 *                     A SECURE TLSA record MUST match.
 	 */
 	cbn_policy_setting  dane			: 2;
@@ -157,9 +157,11 @@ struct cbn_policy {
 
 /**
  * Initializes the cbn_policy
- * @param policy   The policy already allocated or on the stack to initialize
- * @param name     The name of the application on for which to determine from
- *                 what policy setting to inherit.
+ * @param policy   The policy to initialize, already allocated or on the
+ *                 stack.  When policy is NULL, a new cbn_policy will be
+ *                 allocated.
+ * @param name     The name from  which to determine what policy setting
+ *                 to inherit.
  * @param settings A bitwise-orred value witth settings for the individual
  *                 settings.  Missing values will be interpreted as inherit.
  * @return The initialized cbn_policy or NULL on error.
@@ -168,7 +170,8 @@ struct cbn_policy {
 struct cbn_policy *cbn_policy_init2(
     struct cbn_policy *policy, const char *name, unsigned int settings);
 
-/* Initializes the cbn_policy to inherit from the default policy for
+/**
+ * Initializes the cbn_policy to inherit from the default policy for
  * the application, and sets all cbn_policy_setting variables to cbn_inherit.
  * @param policy The policy already allocated or on the stack to initialize
  *               or NULL to allocate a new policy.
@@ -179,7 +182,8 @@ static inline
 struct cbn_policy *cbn_policy_init(struct cbn_policy *policy)
 { return cbn_policy_init2(policy, NULL, 0); }
 
-/* Allocates a new cbn_policy that inherits from the default policy for
+/**
+ * Allocate a new cbn_policy that inherits from the default policy for
  * the application, and sets all cbn_policy_setting variables to cbn_inherit.
  * @return The newly allocated cbn_policy or NULL on error.
  *         Error will occur only when memory could not be allocated.
@@ -196,7 +200,7 @@ typedef enum cbn_dnssec_status {
 	cbn_INDETERMINATE =  3
 } cbn_dnssec_status;
 
-struct cbn_connection {
+struct cbn {
 	const struct cbn_policy *policy;
 
 	/* Underlying socket, should be initialized to -1 when a new socket is
@@ -214,26 +218,25 @@ struct cbn_connection {
 	int                      authenticated	:  1;
 	cbn_dnssec_status        dnssec_status	:  2;
 
-	int _future_cbn_connection_data		: 27;
-	int _future_cbn_connection_data2	: 32;
+	int _future_cbn_data			: 27;
+	int _future_cbn_data2			: 32;
 };
 
-struct cbn_connection *cbn_connection_init2(struct cbn_connection *connection,
+struct cbn *cbn_init2(struct cbn *conn,
     struct cbn_policy *policy, const char *name, unsigned int settings);
 
+static inline struct cbn *cbn_init(struct cbn *conn)
+{ return cbn_init2(conn, NULL, NULL, 0); }
+
+static inline struct cbn *cbn_new()
+{ return cbn_init2(NULL, NULL, NULL, 0); }
+
+
+struct cbn *connect_by_name2(
+    const char *name, const char *service, struct cbn *conn);
+
 static inline
-struct cbn_connection *cbn_connection_init(struct cbn_connection *connection)
-{ return cbn_connection_init2(connection, NULL, NULL, 0); }
-
-static inline struct cbn_connection *cbn_connection_new()
-{ return cbn_connection_init2(NULL, NULL, NULL, 0); }
-
-
-struct cbn_connection *connect_by_name2(
-    const char *name, const char *service, struct cbn_connection *connection);
-
-static inline
-struct cbn_connection *connect_by_name(const char *name, const char *service)
+struct cbn *connect_by_name(const char *name, const char *service)
 { return connect_by_name2(name, service, NULL); }
 
 # ifdef __cplusplus
