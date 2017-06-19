@@ -1,0 +1,14 @@
+networksetup -getdnsservers
+-listallnetworkservices
+-getsearchdomains
+ipconfig getpacket <interface> | grep "domain_name_server"
+en voor <interface> zoiets als eth0
+(13:44:30) willem@nlnetlabs.nl/195b55ba-1cb2-47cc-8927-cd6bd25f5739: muchas gracias
+voor de wifi
+  /System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -I
+Flush caches:
+        /* dscacheutil on 10.5 an later, lookupd before that */
+        system("dscacheutil -flushcache || lookupd -flushcache || discoveryutil udnsflushcaches");
+        system("discoveryutil mdnsflushcache");
+
+en die utilities weten wellicht ook wat de upstream DNS IP is
