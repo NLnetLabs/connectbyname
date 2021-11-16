@@ -141,6 +141,17 @@ trust anchor material is not working, RFC 7958 can be used to fetch
 trust anchor material. this requires a TLS socket (or potentially a TCP
 socket).
 
+## Rust Bindings
+
+Bindings for Rust are important to consider early on for two reasons: Rust is low-level language like C, so it can be a building block for implementations. In addition Rust has language support for asynchronous functions. This makes the Rust version quite different from the C version. Rust tries to have language features with as little overhead as possible. In Rust the basic async mechanisms are:
+
+1. an async function returns a future.
+2. Invoking await on a future blocks the caller until the async function has completed and the value of await is the return value of the function.
+
+In the context of a synchronous function, waiting for an async function to complete blocks the thread. However, if an async function calls await then the async function is suspended and will continue when the called async function has completed.
+
+Calling drop on a future cancels the async function. Note that drop can be called implicitly, so it is important that an async function does not have (conceptual) state.
+
 ## Orchestration. 
 
 Orchestration can be implicit or explicit. Implicit orchestration means that
