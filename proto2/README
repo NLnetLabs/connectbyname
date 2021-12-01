@@ -1,0 +1,2 @@
+Simple prototype, call getaddrinfo, then connect using happy eyeballs
+to avoid waiting too long for a connect to fail.
