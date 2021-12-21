@@ -1,0 +1,4 @@
+Prototype based on libevent, call evdns_base_resolve_ipv4 and
+evdns_base_resolve_ipv6, then connect using happy eyeballs to avoid waiting
+too long for a connect to fail. Create an SSL bufferevent and wait for the
+buffer to become writable.
