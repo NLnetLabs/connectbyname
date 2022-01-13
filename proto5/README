@@ -1,0 +1,3 @@
+Prototype based on libevent, use getdns for name resolution,
+then connect using happy eyeballs to avoid waiting too long for a connect to
+fail. Create an SSL bufferevent and wait for the buffer to become writable.
