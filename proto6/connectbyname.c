@@ -323,7 +323,7 @@ static void dns_callback(getdns_context *context,
 			gdns_r);
 		goto cleanup;
 	}
-	printf("len %d\n", len);
+	printf("len %lu\n", len);
 	got_ipv4= 0;
 	got_ipv6= 0;
 	for (i= 0; i<len; i++)
@@ -352,7 +352,7 @@ static void dns_callback(getdns_context *context,
 			goto cleanup;
 		}
 		fprintf(stderr, "dns_callback: %d type %.*s\n", i,
-			addr_type->size, addr_type->data);
+			(int)addr_type->size, addr_type->data);
 
 		if (addr_type->size != 4)
 		{
@@ -420,18 +420,18 @@ static void dns_callback(getdns_context *context,
 			ctxp->ipv6_to_event= evtimer_new(ctxp->base->event_base,
 				timeout_callback, ctxp);
 			clock_gettime(CLOCK_MONOTONIC, &timeout);
-			fprintf(stderr, "dns_callback: now %d.%09d\n",
+			fprintf(stderr, "dns_callback: now %ld.%09ld\n",
 				timeout.tv_sec, timeout.tv_nsec);
 			timeout.tv_nsec += TIMEOUT_NS % NS_PER_SEC;
 			timeout.tv_sec += TIMEOUT_NS / NS_PER_SEC;
-			fprintf(stderr, "dns_callback: timeout %d.%09d\n",
+			fprintf(stderr, "dns_callback: timeout %ld.%09ld\n",
 				timeout.tv_sec, timeout.tv_nsec);
 			if (timeout.tv_nsec >= NS_PER_SEC)
 			{
 				timeout.tv_nsec -= NS_PER_SEC;
 				timeout.tv_sec++;
 			}
-			fprintf(stderr, "dns_callback: timeout %d.%09d\n",
+			fprintf(stderr, "dns_callback: timeout %ld.%09ld\n",
 				timeout.tv_sec, timeout.tv_nsec);
 			ctxp->ipv6_timeout= timeout;
 
@@ -851,7 +851,7 @@ static void dane_check(struct work_ctx *ctxp)
 		break;
  		
 	default:
-		fprintf(stderr, "dane_check: unknown ldns result\n", ldns_r);
+		fprintf(stderr, "dane_check: unknown ldns result %d\n", ldns_r);
 		abort();
 	}
 	
@@ -894,9 +894,9 @@ static void timeout_callback(evutil_socket_t fd, short events, void *ref)
 
 	ctxp= ref;
 	clock_gettime(CLOCK_MONOTONIC, &now);
-	fprintf(stderr, "timeout_callback: now %d.%09d\n",
+	fprintf(stderr, "timeout_callback: now %ld.%09ld\n",
 		now.tv_sec, now.tv_nsec);
-	fprintf(stderr, "timeout_callback: target %d.%09d\n",
+	fprintf(stderr, "timeout_callback: target %ld.%09ld\n",
 		ctxp->ipv6_timeout.tv_sec, ctxp->ipv6_timeout.tv_nsec);
 
 	if (now.tv_sec < ctxp->ipv6_timeout.tv_sec ||
@@ -908,14 +908,14 @@ static void timeout_callback(evutil_socket_t fd, short events, void *ref)
 		timeout.tv_usec= (ctxp->ipv6_timeout.tv_nsec - now.tv_nsec)/
 			1000 + 1;
 
-		fprintf(stderr, "timeout %d.%06d\n",
+		fprintf(stderr, "timeout %ld.%06ld\n",
 			timeout.tv_sec, timeout.tv_usec);
 		if (timeout.tv_usec < 0)
 		{
 			timeout.tv_usec += US_PER_SEC;
 			timeout.tv_sec--;
 		}
-		fprintf(stderr, "timeout %d.%06d\n",
+		fprintf(stderr, "timeout %ld.%06ld\n",
 			timeout.tv_sec, timeout.tv_usec);
 		evtimer_add(ctxp->ipv6_to_event, &timeout);
 		return;
