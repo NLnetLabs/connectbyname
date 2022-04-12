@@ -1,0 +1,78 @@
+Abstract
+
+The introduction of many new transport portocols for DNS in recent years
+(DoT, DoH, DoQ) significantly increases the complexity of DNS stub
+resolvers that want to support these protocols. A practical way forward
+is to have a DNS client proxy in the host operating system. This allows
+applications to communicate using Do53 and still get the privacy
+benefit from using more secure protocols over the internet. However,
+such a setup leaves the application with no control over which transport
+the proxy uses. This document introduces EDNS options that allow a
+stub resolver to request certain transport and allow the proxy to report
+capabilities and actual transports that are available.
+
+
+Introduction
+
+<repeat and extend abstract>
+
+For short-lived applications, the overhead of setting a DoH connection
+is quite high if the application only needs to send a few DNS requests.
+
+A local proxy may provide some benefit to short-lived applications by
+caching results. In particular if the system uses a so called 'public
+DNS resolver'. In general we assume that the cache is tagged according
+to the source of a reply and the transport it is received on. 
+
+With respect to DNSSEC, we assume that an application that needs
+DNSSEC validation, for example, for DANE validation or SSHFP, will 
+perform the DNSSEC validation within the application itself and does not
+trust the proxy. The proxy can ofcourse do DNSSEC validation as well.
+Important however, is that an untrusted proxy cannot provide an application
+with a traditional (unsigned) trust anchor.
+
+For the transport configuration we expect three levels of details. The
+first is a choice between anythings goes, optimistic encryption and
+authenticated encryption. The second level is where the application also
+specifies the names and/or IP addresses of upstream resolvers. The
+third level is where the application also specifies which transports
+(Do53, DoT, DoH, DoQ) are allowed to be used. A final transport parameter
+is the outgoing interface that is to be used.
+
+For authentication we can have a mix of PKI and DANE. Options are one of 
+the two and not the other, both or one of the two.
+
+In a reponse, the proxy reports the interface, resolver, and transport
+used.
+
+The proxy can provide an application with a signed trust anchor.
+
+Description
+
+The most basic option has 5 flags:
+- force unencrypted (Do53)
+- at least optimistic encryption (DoT, DoH does not allow optimistic
+  encryption, what about DoQ)
+- authenticated encryption 
+- authenticate using PKI only
+- authenticate using DANE only
+
+An extended option has these flags and has per transport (Do53, DoT, DoH,
+DoQ) flags for
+- allow this transport
+- avoid this transport 
+- require this transport
+
+For future transports (which are unknown the application) we can have:
+- allow future transports
+- avoid future transports
+(require future transports, which is a weird thing to do, could be achieved
+by avoiding all known transports)
+
+Then we can extend this even further by adding an IP address and/or a name.
+(open question, if we have only an IP address, can we figure out the name?)
+If we have only a name, then DNS resolution with implicit resolvers will be
+used to resolve the name. If we have a name and an address, connect to
+the address and use the name for authentication.
+
+
