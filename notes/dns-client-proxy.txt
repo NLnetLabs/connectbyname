@@ -1,88 +1,728 @@
+
+
+
+
+ADD                                                         P.C. Homburg
+Internet-Draft                                                2 May 2022
+Intended status: Standards Track                                        
+Expires: 3 November 2022
+
+
+                 Control Options For DNS Client Proxies
+                         draft-homburg-codcp-00
+
 Abstract
 
-The introduction of many new transport portocols for DNS in recent years
-(DoT, DoH, DoQ) significantly increases the complexity of DNS stub
-resolvers that want to support these protocols. A practical way forward
-is to have a DNS client proxy in the host operating system. This allows
-applications to communicate using Do53 and still get the privacy
-benefit from using more secure protocols over the internet. However,
-such a setup leaves the application with no control over which transport
-the proxy uses. This document introduces EDNS options that allow a
-stub resolver to request certain transport and allow the proxy to report
-capabilities and actual transports that are available.
+   The introduction of many new transport portocols for DNS in recent
+   years (DoT, DoH, DoQ) significantly increases the complexity of DNS
+   stub resolvers that want to support these protocols.  A practical way
+   forward is to have a DNS client proxy in the host operating system.
+   This allows applications to communicate using Do53 and still get the
+   privacy benefit from using more secure protocols over the internet.
+   However, such a setup leaves the application with no control over
+   which transport the proxy uses.  This document introduces EDNS(0)
+   options that allow a stub resolver to request certain transport and
+   allow the proxy to report capabilities and actual transports that are
+   available.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 3 November 2022.
+
+Copyright Notice
+
+   Copyright (c) 2022 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
 
 
-Introduction
 
-<repeat and extend abstract>
+Homburg                  Expires 3 November 2022                [Page 1]
+
+Internet-Draft                    codcp                         May 2022
 
-For short-lived applications, the overhead of setting a DoH connection
-is quite high if the application only needs to send a few DNS requests.
 
-A local proxy may provide some benefit to short-lived applications by
-caching results. In particular if the system uses a so called 'public
-DNS resolver'. In general we assume that the cache is tagged according
-to the source of a reply and the transport it is received on. 
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+   extracted from this document must include Simplified BSD License text
+   as described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Simplified BSD License.
 
-With respect to DNSSEC, we assume that an application that needs
-DNSSEC validation, for example, for DANE validation or SSHFP, will 
-perform the DNSSEC validation within the application itself and does not
-trust the proxy. The proxy can ofcourse do DNSSEC validation as well.
-Important however, is that an untrusted proxy cannot provide an application
-with a traditional (unsigned) trust anchor.
+Table of Contents
 
-For the transport configuration we expect three levels of details. The
-first is a choice between anythings goes, optimistic encryption and
-authenticated encryption. The second level is where the application also
-specifies the names and/or IP addresses of upstream resolvers. The
-third level is where the application also specifies which transports
-(Do53, DoT, DoH, DoQ) are allowed to be used. A final transport parameter
-is the outgoing interface that is to be used.
+   1.  Definitions . . . . . . . . . . . . . . . . . . . . . . . . .   2
+   2.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   3
+   3.  Key Words . . . . . . . . . . . . . . . . . . . . . . . . . .   4
+   4.  Description . . . . . . . . . . . . . . . . . . . . . . . . .   4
+   5.  PROXY CONTROL OPTION  . . . . . . . . . . . . . . . . . . . .   4
+   6.  PROXY SCOPE OPTION  . . . . . . . . . . . . . . . . . . . . .   7
+   7.  TRUST ANCHOR OPTION . . . . . . . . . . . . . . . . . . . . .   8
+   8.  Protocol Specification  . . . . . . . . . . . . . . . . . . .   9
+   9.  Client Processing . . . . . . . . . . . . . . . . . . . . . .   9
+     9.1.  Probing . . . . . . . . . . . . . . . . . . . . . . . . .  10
+     9.2.  Trust Anchor  . . . . . . . . . . . . . . . . . . . . . .  10
+   10. Server Processing . . . . . . . . . . . . . . . . . . . . . .  11
+   11. Connection Between Stub Resolver And Proxy  . . . . . . . . .  11
+   12. Security Considerations . . . . . . . . . . . . . . . . . . .  12
+   13. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  12
+   14. Normative References  . . . . . . . . . . . . . . . . . . . .  12
+   15. Informative References  . . . . . . . . . . . . . . . . . . .  12
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  13
 
-For authentication we can have a mix of PKI and DANE. Options are one of 
-the two and not the other, both or one of the two.
+1.  Definitions
 
-Verification of the transport between stub resolver and DNS client proxy.
-A poorly constructed DNS client proxy may forward DNS packet without
-properly handling of EDNS options. To detect and prevent this,
-we introduce an option that limits the connection to host-local, link-local,
-or site-local. The requirement on a conforming DNS client proxy is to
-check where a request comes from and compare this to the option in
-the request (if any). And error is returned if there is a mismatch.
+   Do53  The original, plain text DNS transport as described in
+      [RFC1035].  Typically, UDP is used, with the DNS server listening
+      on port 53.  Sometimes, for example, for large responses, TCP is
+      used, also on port 53.
 
-In a reponse, the proxy reports the interface, resolver, and transport
-used.
+   DoH  DNS over HTTPS as described in [RFC8484].
 
-The proxy can provide an application with a signed trust anchor.
+   DoT  DNS over TLS as described in [RFC7858]
 
-Description
+   DoQ  DNS over QUIC ([RFC9000]) as described in [I-D.ietf-dprive-
+      dnsoquic], not to be confused with DNS over HTTP/3 which also uses
+      QUIC
 
-The most basic option has 5 flags:
-- force unencrypted (Do53)
-- at least optimistic encryption (DoT, DoH does not allow optimistic
-  encryption, what about DoQ)
-- authenticated encryption 
-- authenticate using PKI only
-- authenticate using DANE only
+   EDNS(0) Option  An option as described in [RFC6891]
 
-An extended option has these flags and has per transport (Do53, DoT, DoH,
-DoQ) flags for
-- allow this transport
-- avoid this transport 
-- require this transport
+   h2  This TLS ALPN identifies HTTP/2 as described in [RFC7540]
 
-For future transports (which are unknown the application) we can have:
-- allow future transports
-- avoid future transports
-(require future transports, which is a weird thing to do, could be achieved
-by avoiding all known transports)
+   h3  This TLS ALPN identifies HTTP/3, which is HTTP over QUIC and is
+      described in I.D.ietf-quic-http (expired draft)
 
-Then we can extend this even further by adding an IP address and/or a name.
-(open question, if we have only an IP address, can we figure out the name?
-draft-ietf-add-ddr mentions certificates with IP addresses in the
-subjectAltName. Do those exist?)
-If we have only a name, then DNS resolution with implicit resolvers will be
-used to resolve the name. If we have a name and an address, connect to
-the address and use the name for authentication.
 
-Note for encoding: similar to draft-ietf-add-dnr
+
+Homburg                  Expires 3 November 2022                [Page 2]
+
+Internet-Draft                    codcp                         May 2022
+
+
+   Interface Name  A name that identifies a network interface as
+      described in [RFC3493].  In addition, an interface index converted
+      to a decimal number is also consider an interface name.
+
+2.  Introduction
+
+   The introduction of many new transport portocols for DNS in recent
+   years (DoT, DoH, DoQ) significantly increases the complexity of DNS
+   stub resolvers that want to support these protocols.  In addition,
+   for short-lived applications, the overhead of setting a DoH
+   connection is quite high if the application only needs to send a few
+   DNS requests.
+
+   A practical way forward is to have a DNS client proxy in the host
+   operating system.  A local proxy may provide some benefit to short-
+   lived applications by caching results.  In particular if the system
+   uses a so called 'public DNS resolver'.  In general we assume that
+   the cache is tagged according to the source of a reply and the
+   transport it is received on.
+
+   This allows applications to communicate using Do53 and still get the
+   privacy benefits from using more secure protocols over the internet.
+   However, such a setup leaves the application with no control over
+   which transport the proxy uses.  This document introduces EDNS(0)
+   options that allow a stub resolver to request certain transports and
+   allow the proxy to report capabilities and actual transports that are
+   available.
+
+   With respect to DNSSEC, we assume that an application that needs
+   DNSSEC validation, for example, for DANE validation or SSHFP, will
+   perform the DNSSEC validation within the application itself and does
+   not trust the proxy.  The proxy can ofcourse do DNSSEC validation as
+   well.  Important however, is that an untrusted proxy cannot provide
+   an application with a traditional (unsigned) trust anchor.
+
+   For the transport configuration we expect three levels of details.
+   The first is a choice between anythings goes, optimistic encryption
+   and authenticated encryption.  The second level is where the
+   application also specifies the names and/or IP addresses of upstream
+   resolvers.  The third level is where the application also specifies
+   which transports (Do53, DoT, DoH, DoQ) are allowed to be used.  A
+   final transport parameter is the outgoing interface that is to be
+   used.
+
+   For authentication we can have a mix of PKI and DANE.  Options are
+   one of the two and not the other, both or one of the two.
+
+
+
+
+
+Homburg                  Expires 3 November 2022                [Page 3]
+
+Internet-Draft                    codcp                         May 2022
+
+
+   A poorly constructed DNS client proxy may forward DNS packets without
+   properly handling of EDNS(0) options.  To detect and prevent this, we
+   introduce an option that limits the connection to host-local, link-
+   local, or site-local.  The requirement on a conforming DNS client
+   proxy is to check where a request comes from and compare this to the
+   option in the request (if any).  And error is returned if there is a
+   mismatch.
+
+   In a reponse, the proxy reports the interface, resolver, and
+   transport used.
+
+   In the ideal case, the host operating system provides applications
+   with a secure way to access a DNSSEC trust anchor that is maintained
+   according to [RFC5011].  However in situations where this is not the
+   case, an application can fall back to [RFC7958].  However, for short
+   lived processes, there is considerable overhead in issuing to HTTP(S)
+   requests to data.iana.org to obtain the trust anchor XML file and the
+   signature over the trust anchor.  For this reason, it makes sense to
+   let the proxy cache this information.
+
+3.  Key Words
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in BCP
+   14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+4.  Description
+
+   This document introduces the new EDNS(0) options, and one new status
+   code.  This first option, called PROXY CONTROL Option, specifies
+   which transports a proxy should use to connect to a recursive
+   resolver.
+
+   The second option, called PROXY SCOPE Option, controls the IP address
+   scope of the connection between the application's stub resolver and
+   the proxy.
+
+   Finally, the TRUST ANCHOR Option, provides the application with a
+   DNSSEC trust anchor signed by IANA.
+
+5.  PROXY CONTROL OPTION
+
+
+
+
+
+
+
+
+Homburg                  Expires 3 November 2022                [Page 4]
+
+Internet-Draft                    codcp                         May 2022
+
+
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    0: |                          OPTION-CODE                          |
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    2: |                         OPTION-LENGTH                         |
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    4: | U | O | A | P | D |DO |                     Z                 |
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    6: |A53|D53|AT |DT |AH2|DH2|AH3|DH3|AQ |DQ |         Z             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    8: |         Addr Type             |         Addr Length           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+       ~                IPv4 or IPv6-address(es)                       ~
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+       |  Domain Name Length           |                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
+       ~                   Domain Name                                 ~
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |          SvcParams Length     |                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
+       ~                 SvcParams                                     ~
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |     Interface Name Length     |                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
+       ~                 Interface Name                                ~
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+   where
+
+   OPTION-CODE
+      To be decided
+
+   OPTION-LENGTH
+      Lenght of this option excluding the OPTION-CODE and OPTION-LENGTH
+      fields
+
+   U 
+      force the use of unencrypted communication (Do53)
+
+   O 
+      use at least optimistic encryption
+
+   A 
+      require authenticated encryption
+
+   P 
+      authenticate using a PKI certificate
+
+   D 
+
+
+
+Homburg                  Expires 3 November 2022                [Page 5]
+
+Internet-Draft                    codcp                         May 2022
+
+
+      authenticate using DANE
+
+   DO
+      disallow other transports (transports that are not explicitly
+      listed)
+
+   A53,AT,AH2,AH3,AQ
+      allow respectively Do53, DoT, DoH H2, DoH H3, DoQ
+
+   D53,DT,DH2,DH3,DQ
+      disallow respectively Do53, DoT, DoH H2, DoH H3, DoQ
+
+   Z 
+      reserved, MUST be zero when sending, MUST be ignored when received
+
+   Addr Type
+      Type of addresses, IPv4 or IPv6
+
+   Addr Length
+      length of the addresses in octets.  Must be a multiple of 4 for
+      IPv4 and a multiple of 16 for IPv6
+
+   IPv4 or IPv6-address(es)
+      list of IPv4 or IPv6 addresses
+
+   Domain Name Length
+      length of Domain Name.  Zero if there is no Domain Name
+
+   Domain Name
+      domain name for authentication or resolving IP addresses
+
+   SvcParams Length
+      length of SvcParams
+
+   SvcParams
+      Service parameters
+
+   Interface Name Length
+      length of Interface Name
+
+   Interface Name
+      name of outgoing interface for transport connections
+
+
+
+
+
+
+
+
+
+Homburg                  Expires 3 November 2022                [Page 6]
+
+Internet-Draft                    codcp                         May 2022
+
+
+   This option is designed to give control over what level of detail it
+   wants to specify.  The first 5 flags (U, O, A, P, and D) give
+   generate requirements for properties of DNS transports that are used
+   by the client proxy.  The U flag specifies no encryption, the O flag,
+   at least optimistic encryption and the A flag require authenticated
+   encryptions.  The P and D flags allow the application to require a
+   specfic authentication mechanism (PKI or DANE).
+
+   The next flags provide more detailed control over which transports
+   should be used or not.  For each of 5 different transports (Do53,
+   DoT, DoH with ALPN h2, DoH with ALPN h3, DoQ) there is a flag to
+   allow (A53,AT,AH2,AH3,AQ) or disallow (D53,DT,DH2,DH3,DQ) the use of
+   the transport.  There is space to add more transports later.
+
+   To future proof applications, there is a single flag DO, that
+   disallows transports that are not explicitly listed.  Which this flag
+   clear, the application allows future transports.  With the flag set,
+   the application has to explicitly list which transports can be used.
+   For example, by setting only DO and AT, the application forces the
+   use of DoT.
+
+   Finally, an application can specify it's own resolvers or rely on the
+   resolvers that are know to the proxy.  If ADN Length and Addr Length
+   are both zero, then the application requests to resolvers known to
+   the proxy.  [Note: it is unclear at the moment what to do with any
+   Service Parameters]
+
+   If the application specifies only an authentication-domain-name then
+   the proxy is expect to resolve the name to addresses.  If only
+   addresses are specified then the proxy assumes that no name is known
+   (though a PKI certificate may include an address literal in the
+   subjectAltName).  If both a name and address are specified then the
+   proxy will use the specified addresses and use the name for
+   authentication.
+
+   To simplify the encoding of the option, an option with addresses with
+   have either IPv4 or IPv6 addresses.  If the application wants to
+   specify both IPv4 and IPv6 address for a certain authentication-
+   domain-name then it has to include two options.
+
+   When present, Service Parameters specify how to connect.  Otherwise
+   it is up to the proxy to try various possibilities.
+
+6.  PROXY SCOPE OPTION
+
+
+
+
+
+
+
+Homburg                  Expires 3 November 2022                [Page 7]
+
+Internet-Draft                    codcp                         May 2022
+
+
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    0: |                          OPTION-CODE                          |
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    2: |                         OPTION-LENGTH                         |
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    4: |                          Scope                                |
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+
+   OPTION-CODE
+      To be decided
+
+   OPTION-LENGTH
+      Lenght of this option excluding the OPTION-CODE and OPTION-LENGTH
+      fields
+
+   Scope
+      Scope of the source address of a request.  Scope can have the
+      following values:
+
+                            +=======+============+
+                            | Value | Scope      |
+                            +=======+============+
+                            | 0     | Undefined  |
+                            +-------+------------+
+                            | 1     | Host local |
+                            +-------+------------+
+                            | 2     | Link local |
+                            +-------+------------+
+                            | 3     | Site local |
+                            +-------+------------+
+                            | 4     | Global     |
+                            +-------+------------+
+
+                                   Table 1
+
+   The purpose of this option is deal with badly implemented proxy that
+   forward DNS traffic without first removing any EDNS(0) options.  The
+   option request the DNS proxy that processes the option to report the
+   scope of the source address.  The application can specify that the
+   connection between the stub resolver and the proxy should have, for
+   example, at most host local scope.
+
+7.  TRUST ANCHOR OPTION
+
+
+
+
+
+
+
+
+Homburg                  Expires 3 November 2022                [Page 8]
+
+Internet-Draft                    codcp                         May 2022
+
+
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    0: |                          OPTION-CODE                          |
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    2: |                         OPTION-LENGTH                         |
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    4: |             ANCHORS-XML-LENGTH                                |
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    6: ~             ANCHORS-XML                                       ~
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    4: |             ANCHORS-P7S-LENGTH                                |
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    6: ~             ANCHORS-P7S                                       ~
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+   where
+
+   OPTION-CODE
+      To be decided
+
+   OPTION-LENGTH
+      Lenght of this option excluding the OPTION-CODE and OPTION-LENGTH
+      fields
+
+   ANCHORS-XML-LENGTH
+      Length of ANCHORS-XML in network byte order
+
+   ANCHORS-XML
+      Trust anchors in XML format
+
+   ANCHORS-P7S-LENGTH
+      Length of ANCHORS-P7S in network byte order
+
+   ANCHORS-P7S
+      Signature in p7s format
+
+   This option provides DNSSEC trust anchors as described in [RFC7958].
+
+8.  Protocol Specification
+
+9.  Client Processing
+
+   A stub resolver that wishes to use the PROXY CONTROL Option includes
+   the option in all outgoing DNS requests that require privacy.  The
+   option should be initialized according to the needs of the
+   application.  In addition the PROXY SCOPE Option can be added.  In
+   requests, the Scope field is set to largest scope that the
+   application can accept.
+
+
+
+
+Homburg                  Expires 3 November 2022                [Page 9]
+
+Internet-Draft                    codcp                         May 2022
+
+
+   If the stub resolver receives a reply without a PROXY CONTROL Option
+   included in the reply, then stub resolver has to assume that traffic
+   will have Do%3 levels of privacy.  Similarly, a lack of a PROXY SCOPE
+   Option implies a global scope.
+
+   If the stub resolver receives a BADPROXYPOLICY error then the proxy
+   was unable to meet the requirements of the option(s).  In the reply,
+   the proxy modifies the options to show what it can do.
+
+9.1.  Probing
+
+   In cases where the stub resolvers expects a local DNS proxy, or where
+   the stub resolver has (a limited) fall back to more private
+   transports, or when the security policy of the application is such
+   that is better to fail then the send queries over Do53, the stub
+   resolver first sends probing query to verify that the proxy supports
+   the PROXY CONTROL and PROXY SCOPE options.
+
+   This request queries "resolver.arpa".  The proxy MUST implement this
+   as a Special Use Domain Name.  The actual response is not important.
+   The important part is that the proxy returns PROXY CONTROL and PROXY
+   SCOPE options as described in the this documents and optionally sets
+   the result to BADPROXYPOLICY specified policy.
+
+9.2.  Trust Anchor
+
+   In the ideal case, the host operating system provides applications
+   with a secure way to access a DNSSEC trust anchor that is maintained
+   according to [RFC5011].  However in situations where this is not the
+   case, an application can fall back to [RFC7958].  However, for short
+   lived processes, there is considerable overhead in issuing to HTTP(S)
+   requests to data.iana.org to obtain the trust anchor XML file and the
+   signature over the trust anchor.  For this reason, it makes sense to
+   let the proxy cache this information.
+
+   If the local operating system does not provide a DNSSEC trust anchor,
+   then the application can ask the proxy.  The stub resolver adds the
+   TRUST ANCHOR Option with ANCHORS-XML-LENGTH and ANCHORS-P7S-LENGTH.
+   If the proxy returns both an ANCHORS-XML and an ANCHORS-P7S, then the
+   application verifies the trust anchor using the trust anchor
+   certificate (which needs to come with the application).
+
+
+
+
+
+
+
+
+
+
+Homburg                  Expires 3 November 2022               [Page 10]
+
+Internet-Draft                    codcp                         May 2022
+
+
+10.  Server Processing
+
+   Proxies are encouraged to cache options that appear in requests under
+   the assumption that a stub resolver will send multiple requests.  If
+   a proxy caches DNS responses then the proxy MUST tag cached responses
+   with the properties of the DNS transport.  When responding the later
+   requests, then proxy returns a cached entry only if the parameters of
+   the DNS transport match what is specified in the request.
+
+   When a proxy receives a new set of requirements, the proxy compiles a
+   list of addresses to connect to and per address a list of transports
+   to try.  The proxy SHOULD prefer more private transports over less
+   private ones.
+
+   If the proxy cannot obtain a connect to a recursive resolver in a way
+   that matches the provided policy, then the proxy sets the
+   BADPROXYPOLICY status in the reply.  In addition the proxy SHOULD try
+   to find at least one connection to a recursive resolver.  If the
+   proxy did not find an alternative connection to recursive resolver
+   (also if it didn't try) then the proxy include a PROXY POLICY Option
+   with all flags set to zero, and with ADN Length, Addr Length, and
+   SvcParams Length set to zero as well.
+
+   If the proxy does have one or more alternative connections to
+   resursive resolvers then the proxy generates options with the
+   properties of those connection, with a maximum of three connections.
+
+   If the proxy finds a PROXY SCOPE Option, then it calculates the scope
+   from the source address.  If the scope is larger then specified in
+   the option, then the proxy returns a BADPROXYPOLICY status.  The
+   proxy sets the value of Scope to the actual scope of the source
+   address of the request.
+
+   If the request contains a TRUST ANCHOR Option, then the proxy tries
+   to fetch the trust anchor XML and p7s files if it does not have them
+   already.  If fetch one or both fails then the proxy sets the
+   corresponding length to zero.  It is not clear how long the proxy can
+   cache this information.  [RFC7958] Does not describe how long these
+   documents can be cache.  A simple solution is to take the Expires
+   header in the HTTP reply.
+
+11.  Connection Between Stub Resolver And Proxy
+
+   Absent other configuration, a stub resolver that implements this
+   standard SHOULD connect to the proxy using Do53 and as remote address
+   either ::1 or 127.0.0.1.  In particular, the stub resolver SHOULD
+   avoid using name servers listed in files such as /etc/resolv.conf.
+
+
+
+
+Homburg                  Expires 3 November 2022               [Page 11]
+
+Internet-Draft                    codcp                         May 2022
+
+
+   There reason for this is to simply the intergration of local DNS
+   proxies in existing environments.  If the stub resolver ignores /etc/
+   resolv.conf then the proxy can use that information to connect to
+   recursive resolvers.
+
+   If no DNS server is responding to queries sent using Do53 to ::1 and
+   127.0.0.1, or if the response indicates that this standard is not
+   supported, then the stub resolver MAY fall back to traditional
+   configuration methods, such as /etc/resolv.conf.  However, in that
+   case the stub resolver MUST make sure that doing so does not violate
+   the policy set by the application.
+
+12.  Security Considerations
+
+13.  IANA Considerations
+
+   IANA has assigned the following DNS EDNS0 option codes:
+
+    Value   Name           Status     Reference
+   ------- -------------- ---------- -----------
+    TBD     PROXY POLICY   Standard   RFC xxxx
+    TBD     PROXY SCOPE    Standard   RFC xxxx
+    TBD     TRUST ANCHOR   Standard   RFC xxxx
+
+   IANA has assigned the following DNS error code as an early allocation
+   per [RFC7120]:
+
+    RCODE    Name             Description                   Reference
+   -------- ---------------- ----------------------------- -----------
+    TBD      BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
+
+14.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/info/rfc2119>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/info/rfc8174>.
+
+15.  Informative References
+
+   [RFC1035]  Mockapetris, P., "Domain names - implementation and
+              specification", STD 13, RFC 1035, DOI 10.17487/RFC1035,
+              November 1987, <https://www.rfc-editor.org/info/rfc1035>.
+
+
+
+
+Homburg                  Expires 3 November 2022               [Page 12]
+
+Internet-Draft                    codcp                         May 2022
+
+
+   [RFC3493]  Gilligan, R., Thomson, S., Bound, J., McCann, J., and W.
+              Stevens, "Basic Socket Interface Extensions for IPv6",
+              RFC 3493, DOI 10.17487/RFC3493, February 2003,
+              <https://www.rfc-editor.org/info/rfc3493>.
+
+   [RFC5011]  StJohns, M., "Automated Updates of DNS Security (DNSSEC)
+              Trust Anchors", STD 74, RFC 5011, DOI 10.17487/RFC5011,
+              September 2007, <https://www.rfc-editor.org/info/rfc5011>.
+
+   [RFC6891]  Damas, J., Graff, M., and P. Vixie, "Extension Mechanisms
+              for DNS (EDNS(0))", STD 75, RFC 6891,
+              DOI 10.17487/RFC6891, April 2013,
+              <https://www.rfc-editor.org/info/rfc6891>.
+
+   [RFC7120]  Cotton, M., "Early IANA Allocation of Standards Track Code
+              Points", BCP 100, RFC 7120, DOI 10.17487/RFC7120, January
+              2014, <https://www.rfc-editor.org/info/rfc7120>.
+
+   [RFC7540]  Belshe, M., Peon, R., and M. Thomson, Ed., "Hypertext
+              Transfer Protocol Version 2 (HTTP/2)", RFC 7540,
+              DOI 10.17487/RFC7540, May 2015,
+              <https://www.rfc-editor.org/info/rfc7540>.
+
+   [RFC7858]  Hu, Z., Zhu, L., Heidemann, J., Mankin, A., Wessels, D.,
+              and P. Hoffman, "Specification for DNS over Transport
+              Layer Security (TLS)", RFC 7858, DOI 10.17487/RFC7858, May
+              2016, <https://www.rfc-editor.org/info/rfc7858>.
+
+   [RFC7958]  Abley, J., Schlyter, J., Bailey, G., and P. Hoffman,
+              "DNSSEC Trust Anchor Publication for the Root Zone",
+              RFC 7958, DOI 10.17487/RFC7958, August 2016,
+              <https://www.rfc-editor.org/info/rfc7958>.
+
+   [RFC8484]  Hoffman, P. and P. McManus, "DNS Queries over HTTPS
+              (DoH)", RFC 8484, DOI 10.17487/RFC8484, October 2018,
+              <https://www.rfc-editor.org/info/rfc8484>.
+
+   [RFC9000]  Iyengar, J., Ed. and M. Thomson, Ed., "QUIC: A UDP-Based
+              Multiplexed and Secure Transport", RFC 9000,
+              DOI 10.17487/RFC9000, May 2021,
+              <https://www.rfc-editor.org/info/rfc9000>.
+
+Author's Address
+
+   Philip Homburg
+
+   Email: philip@nlnetlabs.nl
+
+
+
+
+Homburg                  Expires 3 November 2022               [Page 13]
