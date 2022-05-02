@@ -42,6 +42,14 @@ is the outgoing interface that is to be used.
 For authentication we can have a mix of PKI and DANE. Options are one of 
 the two and not the other, both or one of the two.
 
+Verification of the transport between stub resolver and DNS client proxy.
+A poorly constructed DNS client proxy may forward DNS packet without
+properly handling of EDNS options. To detect and prevent this,
+we introduce an option that limits the connection to host-local, link-local,
+or site-local. The requirement on a conforming DNS client proxy is to
+check where a request comes from and compare this to the option in
+the request (if any). And error is returned if there is a mismatch.
+
 In a reponse, the proxy reports the interface, resolver, and transport
 used.
 
@@ -70,9 +78,11 @@ For future transports (which are unknown the application) we can have:
 by avoiding all known transports)
 
 Then we can extend this even further by adding an IP address and/or a name.
-(open question, if we have only an IP address, can we figure out the name?)
+(open question, if we have only an IP address, can we figure out the name?
+draft-ietf-add-ddr mentions certificates with IP addresses in the
+subjectAltName. Do those exist?)
 If we have only a name, then DNS resolution with implicit resolvers will be
 used to resolve the name. If we have a name and an address, connect to
 the address and use the name for authentication.
 
-
+Note for encoding: similar to draft-ietf-add-dnr
