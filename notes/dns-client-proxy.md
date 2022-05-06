@@ -111,7 +111,7 @@ Important however, is that an untrusted proxy cannot provide an application
 with a traditional (unsigned) trust anchor.
 
 For the transport configuration we expect three levels of details. The
-first is a choice between anythings goes, optimistic encryption and
+first is a choice between anythings goes, unauthenticated encryption and
 authenticated encryption. The second level is where the application also
 specifies the names and/or IP addresses of upstream resolvers. The
 third level is where the application also specifies which transports
@@ -167,7 +167,7 @@ trust anchor signed by IANA.
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
    2: |                         OPTION-LENGTH                         |
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   4: | U | O | A | P | D |DO |                     Z                 |
+   4: | U |UA | A | P | D |DO |                     Z                 |
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
    6: |A53|D53|AT |DT |AH2|DH2|AH3|DH3|AQ |DQ |         Z             |
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -204,9 +204,9 @@ U
 
 : force the use of unencrypted communication (Do53)
 
-O
+UA
 
-: use at least optimistic encryption
+: require unauthenticated encryption
 
 A
 
@@ -274,12 +274,17 @@ Interface Name
 : name of outgoing interface for transport connections
 
 This option is designed to give control over what level of detail it
-wants to specify. The first 5 flags (U, O, A, P, and D) give generate
+wants to specify. The first 5 flags (U, UA, A, P, and D) give generate
 requirements for properties of DNS transports that are used by the
-client proxy. The U flag specifies no encryption, the O flag, at
-least optimistic encryption and the A flag require authenticated
-encryptions. The P and D flags allow the application to require
-a specfic authentication mechanism (PKI or DANE).
+client proxy. The U flag specifies no encryption, the UA flag, at
+least unauthenticated encryption and the A flag require authenticated
+encryptions. With the U, UA, and A flags clear, an effort is made to
+reach authenticated encryption, if that fails unauthenticated encryption
+and if that fails, fall back to an unencryption transport.
+The P and D flags allow the application to require
+a specfic authentication mechanism (PKI or DANE). When both flags are set,
+PKI and DANE are required together. If no flags are set, are least one of
+the two has to succeed if authenticated encryption is required.
 
 The next flags provide more detailed control over which transports
 should be used or not. For each of 5 different transports
