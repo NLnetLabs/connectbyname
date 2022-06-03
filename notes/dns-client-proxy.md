@@ -532,4 +532,8 @@ IANA has assigned the following DNS EDNS0 option codes:
     -------- ---------------- ----------------------------- -----------
      TBD      BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
 
+# Acknowledgements
+
+Many thanks to Yorgos Thessalonikefs and Willem Toorop for their feedback.
+
 {backmatter}
