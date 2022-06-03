@@ -289,7 +289,9 @@ The next flags provide more detailed control over which transports
 should be used or not. For each of 5 different transports
 (Do53, DoT, DoH with ALPN h2, DoH with ALPN h3, DoQ) there is a flag
 to allow (A53,AT,AH2,AH3,AQ) or disallow (D53,DT,DH2,DH3,DQ) the use of the
-transport. There is space to add more transports later.
+transport. There is space to add more transports later. Note that setting
+the A flags and the D flag for a protocol (for example, setting both the
+A53 and the D53 flags) is not allowed and a proxy SHOULD reject such a request.
 
 To future proof applications, there is a single flag DO, that disallows
 transports that are not explicitly listed. With this flag clear,
@@ -297,6 +299,17 @@ the application allows future transports. With the flag set, the
 application has to explicitly list which transports can be used.
 For example, by setting only DO and AT, the application forces the
 use of DoT.
+
+When DO = 0:
+
+* all transports are in the pool of potentially usable transports
+* D53, DT, DH2, DH3 and DQ remove those transports from the pool
+
+When DO = 1:
+
+* no transports are in the pool of potentially usable transports
+* A53, AT, AH2, AH3 and AQ add those transports to the pool
+
 
 Finally, an application can specify its own resolvers or rely on the
 resolvers that are know to the proxy. If ADN Length and Addr Length
