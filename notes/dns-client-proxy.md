@@ -477,7 +477,7 @@ matches the provided policy, then the proxy sets the BADPROXYPOLICY
 response code in the reply. In addition the proxy SHOULD try to find at least
 one connection to a recursive resolver. If the proxy did not find an
 alternative connection to a recursive resolver (also if it didn't try) then
-the proxy includes a PROXY POLICY Option with all flags set to zero,
+the proxy includes a PROXY CONTROL Option with all flags set to zero,
 and with  ADN Length, Addr Length, and SvcParams Length set to zero as well.
 
 If the proxy does have one or more alternative connections to recursive
@@ -521,7 +521,7 @@ IANA has assigned the following DNS EDNS0 option codes:
 
      Value   Name           Status     Reference
     ------- -------------- ---------- -----------
-     TBD     PROXY POLICY   Standard   RFC xxxx
+     TBD     PROXY CONTROL  Standard   RFC xxxx
      TBD     PROXY SCOPE    Standard   RFC xxxx
      TBD     TRUST ANCHOR   Standard   RFC xxxx
 
