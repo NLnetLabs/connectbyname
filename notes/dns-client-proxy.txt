@@ -71,20 +71,20 @@ Table of Contents
    3.  Key Words . . . . . . . . . . . . . . . . . . . . . . . . . .   4
    4.  Description . . . . . . . . . . . . . . . . . . . . . . . . .   4
    5.  PROXY CONTROL OPTION  . . . . . . . . . . . . . . . . . . . .   4
-   6.  PROXY SCOPE OPTION  . . . . . . . . . . . . . . . . . . . . .   7
-   7.  TRUST ANCHOR OPTION . . . . . . . . . . . . . . . . . . . . .   8
+   6.  PROXY SCOPE OPTION  . . . . . . . . . . . . . . . . . . . . .   8
+   7.  TRUST ANCHOR OPTION . . . . . . . . . . . . . . . . . . . . .   9
    8.  Protocol Specification  . . . . . . . . . . . . . . . . . . .   9
-   9.  Client Processing . . . . . . . . . . . . . . . . . . . . . .   9
+   9.  Client Processing . . . . . . . . . . . . . . . . . . . . . .  10
      9.1.  Probing . . . . . . . . . . . . . . . . . . . . . . . . .  10
      9.2.  Trust Anchor  . . . . . . . . . . . . . . . . . . . . . .  10
    10. Server Processing . . . . . . . . . . . . . . . . . . . . . .  11
-   11. Connection Between Stub Resolver And Proxy  . . . . . . . . .  11
+   11. Connection Between Stub Resolver And Proxy  . . . . . . . . .  12
    12. Security Considerations . . . . . . . . . . . . . . . . . . .  12
    13. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  12
    14. Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  12
    15. Normative References  . . . . . . . . . . . . . . . . . . . .  12
-   16. Informative References  . . . . . . . . . . . . . . . . . . .  12
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  13
+   16. Informative References  . . . . . . . . . . . . . . . . . . .  13
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  14
 
 1.  Definitions
 
@@ -152,16 +152,16 @@ Internet-Draft                    codcp                        June 2022
    an application with a traditional (unsigned) trust anchor.
 
    For the transport configuration we expect three levels of details.
-   The first is a choice between anythings goes, unauthenticated
-   encryption and authenticated encryption.  The second level is where
-   the application also specifies the names and/or IP addresses of
-   upstream resolvers.  The third level is where the application also
-   specifies which transports (Do53, DoT, DoH, DoQ) are allowed to be
-   used.  A final transport parameter is the outgoing interface that is
-   to be used.
+   The first is a choice between requiring authenticated encryption,
+   also allowing unauthenticated encryption or doing opportunistic
+   encryption on an best effort basis.  The second level is where the
+   application also specifies the names and/or IP addresses of upstream
+   resolvers.  The third level is where the application also specifies
+   which transports (Do53, DoT, DoH, DoQ) are allowed to be used.  A
+   final transport parameter is the outgoing interface that is to be
+   used.
 
-   For authentication we can have a mix of PKI and DANE.  Options are
-   one of the two and not the other, both or one of the two.
+
 
 
 
@@ -169,6 +169,9 @@ Homburg                  Expires 5 December 2022                [Page 3]
 
 Internet-Draft                    codcp                        June 2022
 
+
+   For authentication we can have a mix of PKI and DANE.  Options are
+   one of the two and not the other, both or one of the two.
 
    A poorly constructed DNS client proxy may forward DNS packets without
    properly handling of EDNS(0) options.  To detect and prevent this, we
@@ -213,9 +216,6 @@ Internet-Draft                    codcp                        June 2022
    DNSSEC trust anchor signed by IANA.
 
 5.  PROXY CONTROL OPTION
-
-
-
 
 
 
@@ -351,7 +351,10 @@ Internet-Draft                    codcp                        June 2022
    should be used or not.  For each of 5 different transports (Do53,
    DoT, DoH with ALPN h2, DoH with ALPN h3, DoQ) there is a flag to
    allow (A53,AT,AH2,AH3,AQ) or disallow (D53,DT,DH2,DH3,DQ) the use of
-   the transport.  There is space to add more transports later.
+   the transport.  There is space to add more transports later.  Note
+   that setting the A flags and the D flag for a protocol (for example,
+   setting both the A53 and the D53 flags) is not allowed and a proxy
+   SHOULD reject such a request.
 
    To future proof applications, there is a single flag DO, that
    disallows transports that are not explicitly listed.  With this flag
@@ -359,6 +362,16 @@ Internet-Draft                    codcp                        June 2022
    the application has to explicitly list which transports can be used.
    For example, by setting only DO and AT, the application forces the
    use of DoT.
+
+   When DO = 0:
+
+   *  all transports are in the pool of potentially usable transports
+   *  D53, DT, DH2, DH3 and DQ remove those transports from the pool
+
+   When DO = 1:
+
+   *  no transports are in the pool of potentially usable transports
+   *  A53, AT, AH2, AH3 and AQ add those transports to the pool
 
    Finally, an application can specify its own resolvers or rely on the
    resolvers that are know to the proxy.  If ADN Length and Addr Length
@@ -374,25 +387,22 @@ Internet-Draft                    codcp                        June 2022
    proxy will use the specified addresses and use the name for
    authentication.
 
-   To simplify the encoding of the option, an option with addresses will
-   have either IPv4 or IPv6 addresses.  If the application wants to
-   specify both IPv4 and IPv6 address for a certain authentication-
-   domain-name then it has to include two options.
-
-   When present, Service Parameters specify how to connect.  Otherwise
-   it is up to the proxy to try various possibilities.
-
-6.  PROXY SCOPE OPTION
-
-
-
-
 
 
 Homburg                  Expires 5 December 2022                [Page 7]
 
 Internet-Draft                    codcp                        June 2022
 
+
+   To simplify the encoding of the option, an option with addresses will
+   have either IPv4 or IPv6 addresses.  If the application wants to
+   specify both IPv4 and IPv6 addresses for a certain authentication-
+   domain-name then it has to include two options.
+
+   When present, Service Parameters specify how to connect.  Otherwise
+   it is up to the proxy to try various possibilities.
+
+6.  PROXY SCOPE OPTION
 
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     0: |                          OPTION-CODE                          |
@@ -432,16 +442,6 @@ Internet-Draft                    codcp                        June 2022
    The purpose of this option is to deal with badly implemented proxies
    that forward DNS traffic without first removing any EDNS(0) options.
    The option requests the DNS proxy that processes the option to report
-   the scope of the source address.  The application can specify that
-   the connection between the stub resolver and the proxy should have,
-   for example, at most host local scope.
-
-7.  TRUST ANCHOR OPTION
-
-
-
-
-
 
 
 
@@ -449,6 +449,12 @@ Homburg                  Expires 5 December 2022                [Page 8]
 
 Internet-Draft                    codcp                        June 2022
 
+
+   the scope of the source address.  The application can specify that
+   the connection between the stub resolver and the proxy should have,
+   for example, at most host local scope.
+
+7.  TRUST ANCHOR OPTION
 
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     0: |                          OPTION-CODE                          |
@@ -489,14 +495,8 @@ Internet-Draft                    codcp                        June 2022
 
 8.  Protocol Specification
 
-9.  Client Processing
 
-   A stub resolver that wishes to use the PROXY CONTROL Option includes
-   the option in all outgoing DNS requests that require privacy.  The
-   option should be initialized according to the needs of the
-   application.  In addition the PROXY SCOPE Option can be added.  In
-   requests, the Scope field is set to largest scope that the
-   application can accept.
+
 
 
 
@@ -505,6 +505,15 @@ Homburg                  Expires 5 December 2022                [Page 9]
 
 Internet-Draft                    codcp                        June 2022
 
+
+9.  Client Processing
+
+   A stub resolver that wishes to use the PROXY CONTROL Option includes
+   the option in all outgoing DNS requests that require privacy.  The
+   option should be initialized according to the needs of the
+   application.  In addition the PROXY SCOPE Option can be added.  In
+   requests, the Scope field is set to largest scope that the
+   application can accept.
 
    If the stub resolver receives a reply without a PROXY CONTROL Option
    included in the reply, then stub resolver has to assume that traffic
@@ -541,15 +550,6 @@ Internet-Draft                    codcp                        June 2022
    signature over the trust anchor.  For this reason, it makes sense to
    let the proxy cache this information.
 
-   If the local operating system does not provide a DNSSEC trust anchor,
-   then the application can ask the proxy.  The stub resolver adds the
-   TRUST ANCHOR Option with ANCHORS-XML-LENGTH and ANCHORS-P7S-LENGTH.
-   If the proxy returns both an ANCHORS-XML and an ANCHORS-P7S, then the
-   application verifies the trust anchor using the trust anchor
-   certificate (which needs to come with the application).
-
-
-
 
 
 
@@ -561,6 +561,13 @@ Homburg                  Expires 5 December 2022               [Page 10]
 
 Internet-Draft                    codcp                        June 2022
 
+
+   If the local operating system does not provide a DNSSEC trust anchor,
+   then the application can ask the proxy.  The stub resolver adds the
+   TRUST ANCHOR Option with ANCHORS-XML-LENGTH and ANCHORS-P7S-LENGTH.
+   If the proxy returns both an ANCHORS-XML and an ANCHORS-P7S, then the
+   application verifies the trust anchor using the trust anchor
+   certificate (which needs to come with the application).
 
 10.  Server Processing
 
@@ -603,13 +610,6 @@ Internet-Draft                    codcp                        June 2022
    documents can be cache.  A simple solution is to take the Expires
    header in the HTTP reply.
 
-11.  Connection Between Stub Resolver And Proxy
-
-   Absent other configuration, a stub resolver that implements this
-   standard SHOULD connect to the proxy using Do53 and as remote address
-   either ::1 or 127.0.0.1.  In particular, the stub resolver SHOULD
-   avoid using name servers listed in files such as /etc/resolv.conf.
-
 
 
 
@@ -618,7 +618,14 @@ Homburg                  Expires 5 December 2022               [Page 11]
 Internet-Draft                    codcp                        June 2022
 
 
-   There reason for this is to simplify the integration of local DNS
+11.  Connection Between Stub Resolver And Proxy
+
+   Absent other configuration, a stub resolver that implements this
+   standard SHOULD connect to the proxy using Do53 and as remote address
+   either ::1 or 127.0.0.1.  In particular, the stub resolver SHOULD
+   avoid using name servers listed in files such as /etc/resolv.conf.
+
+   The reason for this is to simplify the integration of local DNS
    proxies in existing environments.  If the stub resolver ignores /etc/
    resolv.conf then the proxy can use that information to connect to
    recursive resolvers.
@@ -656,6 +663,17 @@ Internet-Draft                    codcp                        June 2022
 
 15.  Normative References
 
+
+
+
+
+
+
+Homburg                  Expires 5 December 2022               [Page 12]
+
+Internet-Draft                    codcp                        June 2022
+
+
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
@@ -666,13 +684,6 @@ Internet-Draft                    codcp                        June 2022
               May 2017, <https://www.rfc-editor.org/info/rfc8174>.
 
 16.  Informative References
-
-
-
-Homburg                  Expires 5 December 2022               [Page 12]
-
-Internet-Draft                    codcp                        June 2022
-
 
    [RFC1035]  Mockapetris, P., "Domain names - implementation and
               specification", STD 13, RFC 1035, DOI 10.17487/RFC1035,
@@ -711,6 +722,14 @@ Internet-Draft                    codcp                        June 2022
               RFC 7958, DOI 10.17487/RFC7958, August 2016,
               <https://www.rfc-editor.org/info/rfc7958>.
 
+
+
+
+Homburg                  Expires 5 December 2022               [Page 13]
+
+Internet-Draft                    codcp                        June 2022
+
+
    [RFC8484]  Hoffman, P. and P. McManus, "DNS Queries over HTTPS
               (DoH)", RFC 8484, DOI 10.17487/RFC8484, October 2018,
               <https://www.rfc-editor.org/info/rfc8484>.
@@ -722,28 +741,9 @@ Internet-Draft                    codcp                        June 2022
 
 Author's Address
 
-
-
-
-Homburg                  Expires 5 December 2022               [Page 13]
-
-Internet-Draft                    codcp                        June 2022
-
-
    Philip Homburg
 
    Email: philip@nlnetlabs.nl
-
-
-
-
-
-
-
-
-
-
-
 
 
 

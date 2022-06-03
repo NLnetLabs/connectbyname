@@ -326,7 +326,7 @@ specified addresses and use the name for authentication.
 
 To simplify the encoding of the option, an option with addresses will
 have either IPv4 or IPv6 addresses. If the application wants to specify
-both IPv4 and IPv6 address for a certain authentication-domain-name
+both IPv4 and IPv6 addresses for a certain authentication-domain-name
 then it has to include two options.
 
 When present, Service Parameters specify how to connect. Otherwise it is
@@ -515,7 +515,7 @@ SHOULD connect to the proxy using Do53 and as remote address either ::1 or
 127.0.0.1. In particular, the stub resolver SHOULD avoid using name
 servers listed in files such as /etc/resolv.conf.
 
-There reason for this is to simplify the integration of local DNS proxies
+The reason for this is to simplify the integration of local DNS proxies
 in existing environments. If the stub resolver ignores /etc/resolv.conf
 then the proxy can use that information to connect to recursive resolvers.
 
