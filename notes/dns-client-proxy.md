@@ -120,15 +120,25 @@ is the outgoing interface that is to be used.
 For authentication we can have a mix of PKI and DANE. Options are one of
 the two and not the other, both or one of the two.
 
-A poorly constructed DNS client proxy may forward DNS packets without
-properly handling of EDNS(0) options. To detect and prevent this,
-we introduce an option that limits the connection to host-local, link-local,
-or site-local. The requirement on a conforming DNS client proxy is to
-check where a request comes from and compare this to the option in
-the request (if any). An error is returned if there is a mismatch.
-
 In a response, the proxy reports the interface, resolver, and transport
 used.
+
+As described in [@RFC5625, Section 3] of [@RFC5625], some simple DNS proxies
+may just forward DNS packets without handling of EDNS(0) options.
+So what could happen is that an application sends a privacy sensitive
+request to local proxy,
+expecting the proxy upstream connection to be encrypted. However, a simple
+proxy may just forward the request unencrypted to another proxy, for exmaple,
+one in a CPE that does implement the protocol described in this document. So
+what could happen is that the request travels unencrypted over a local lan,
+or if proxies deeper in the network support this protocol, even further
+without the application noticing that something is wrong.
+
+To handle this case, we introduce an option that limits the connection between
+the stub resolver and the proxy to host-local, link-local, or site-local. The
+requirement on a conforming DNS client proxy is to
+check where a request comes from and compare this to the option in
+the request (if any). An error is returned if there is a mismatch.
 
 In the ideal case, the host operating system provides applications with a
 secure way to access a DNSSEC trust anchor that is maintained according to

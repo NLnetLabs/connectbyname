@@ -70,19 +70,19 @@ Table of Contents
    2.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   3
    3.  Key Words . . . . . . . . . . . . . . . . . . . . . . . . . .   4
    4.  Description . . . . . . . . . . . . . . . . . . . . . . . . .   4
-   5.  PROXY CONTROL OPTION  . . . . . . . . . . . . . . . . . . . .   4
+   5.  PROXY CONTROL OPTION  . . . . . . . . . . . . . . . . . . . .   5
    6.  PROXY SCOPE OPTION  . . . . . . . . . . . . . . . . . . . . .   8
    7.  TRUST ANCHOR OPTION . . . . . . . . . . . . . . . . . . . . .   9
-   8.  Protocol Specification  . . . . . . . . . . . . . . . . . . .   9
+   8.  Protocol Specification  . . . . . . . . . . . . . . . . . . .  10
    9.  Client Processing . . . . . . . . . . . . . . . . . . . . . .  10
      9.1.  Probing . . . . . . . . . . . . . . . . . . . . . . . . .  10
-     9.2.  Trust Anchor  . . . . . . . . . . . . . . . . . . . . . .  10
+     9.2.  Trust Anchor  . . . . . . . . . . . . . . . . . . . . . .  11
    10. Server Processing . . . . . . . . . . . . . . . . . . . . . .  11
    11. Connection Between Stub Resolver And Proxy  . . . . . . . . .  12
    12. Security Considerations . . . . . . . . . . . . . . . . . . .  12
    13. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  12
-   14. Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  12
-   15. Normative References  . . . . . . . . . . . . . . . . . . . .  12
+   14. Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  13
+   15. Normative References  . . . . . . . . . . . . . . . . . . . .  13
    16. Informative References  . . . . . . . . . . . . . . . . . . .  13
    Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  14
 
@@ -173,16 +173,26 @@ Internet-Draft                    codcp                        June 2022
    For authentication we can have a mix of PKI and DANE.  Options are
    one of the two and not the other, both or one of the two.
 
-   A poorly constructed DNS client proxy may forward DNS packets without
-   properly handling of EDNS(0) options.  To detect and prevent this, we
-   introduce an option that limits the connection to host-local, link-
-   local, or site-local.  The requirement on a conforming DNS client
-   proxy is to check where a request comes from and compare this to the
-   option in the request (if any).  An error is returned if there is a
-   mismatch.
-
    In a response, the proxy reports the interface, resolver, and
    transport used.
+
+   As described in Section 3 of [RFC5625], some simple DNS proxies may
+   just forward DNS packets without handling of EDNS(0) options.  So
+   what could happen is that an application sends a privacy sensitive
+   request to local proxy, expecting the proxy upstream connection to be
+   encrypted.  However, a simple proxy may just forward the request
+   unencrypted to another proxy, for exmaple, one in a CPE that does
+   implement the protocol described in this document.  So what could
+   happen is that the request travels unencrypted over a local lan, or
+   if proxies deeper in the network support this protocol, even further
+   without the application noticing that something is wrong.
+
+   To handle this case, we introduce an option that limits the
+   connection between the stub resolver and the proxy to host-local,
+   link-local, or site-local.  The requirement on a conforming DNS
+   client proxy is to check where a request comes from and compare this
+   to the option in the request (if any).  An error is returned if there
+   is a mismatch.
 
    In the ideal case, the host operating system provides applications
    with a secure way to access a DNSSEC trust anchor that is maintained
@@ -208,6 +218,14 @@ Internet-Draft                    codcp                        June 2022
    specifies which transports a proxy should use to connect to a
    recursive resolver.
 
+
+
+
+Homburg                  Expires 5 December 2022                [Page 4]
+
+Internet-Draft                    codcp                        June 2022
+
+
    The second option, called PROXY SCOPE Option, controls the IP address
    scope of the connection between the application's stub resolver and
    the proxy.
@@ -216,15 +234,6 @@ Internet-Draft                    codcp                        June 2022
    DNSSEC trust anchor signed by IANA.
 
 5.  PROXY CONTROL OPTION
-
-
-
-
-
-Homburg                  Expires 5 December 2022                [Page 4]
-
-Internet-Draft                    codcp                        June 2022
-
 
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     0: |                          OPTION-CODE                          |
@@ -265,6 +274,14 @@ Internet-Draft                    codcp                        June 2022
       force the use of unencrypted communication (Do53)
 
    UA
+
+
+
+Homburg                  Expires 5 December 2022                [Page 5]
+
+Internet-Draft                    codcp                        June 2022
+
+
       require unauthenticated encryption
 
    A 
@@ -274,14 +291,6 @@ Internet-Draft                    codcp                        June 2022
       authenticate using a PKI certificate
 
    D 
-
-
-
-Homburg                  Expires 5 December 2022                [Page 5]
-
-Internet-Draft                    codcp                        June 2022
-
-
       authenticate using DANE
 
    DO
@@ -322,6 +331,13 @@ Internet-Draft                    codcp                        June 2022
    Interface Name Length
       length of Interface Name
 
+
+
+Homburg                  Expires 5 December 2022                [Page 6]
+
+Internet-Draft                    codcp                        June 2022
+
+
    Interface Name
       name of outgoing interface for transport connections
 
@@ -330,14 +346,6 @@ Internet-Draft                    codcp                        June 2022
    generate requirements for properties of DNS transports that are used
    by the client proxy.  The U flag specifies no encryption, the UA
    flag, at least unauthenticated encryption and the A flag require
-
-
-
-Homburg                  Expires 5 December 2022                [Page 6]
-
-Internet-Draft                    codcp                        June 2022
-
-
    authenticated encryptions.  With the U, UA, and A flags clear, an
    effort is made to reach authenticated encryption, if that fails
    unauthenticated encryption and if that fails, fall back to an
@@ -379,6 +387,13 @@ Internet-Draft                    codcp                        June 2022
    the proxy.  [Note: it is unclear at the moment what to do with any
    Service Parameters]
 
+
+
+Homburg                  Expires 5 December 2022                [Page 7]
+
+Internet-Draft                    codcp                        June 2022
+
+
    If the application specifies only an authentication-domain-name then
    the proxy is expected to resolve the name to addresses.  If only
    addresses are specified then the proxy assumes that no name is known
@@ -386,13 +401,6 @@ Internet-Draft                    codcp                        June 2022
    subjectAltName).  If both a name and address are specified then the
    proxy will use the specified addresses and use the name for
    authentication.
-
-
-
-Homburg                  Expires 5 December 2022                [Page 7]
-
-Internet-Draft                    codcp                        June 2022
-
 
    To simplify the encoding of the option, an option with addresses will
    have either IPv4 or IPv6 addresses.  If the application wants to
@@ -423,6 +431,25 @@ Internet-Draft                    codcp                        June 2022
       Scope of the source address of a request.  Scope can have the
       following values:
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Homburg                  Expires 5 December 2022                [Page 8]
+
+Internet-Draft                    codcp                        June 2022
+
+
                             +=======+============+
                             | Value | Scope      |
                             +=======+============+
@@ -442,14 +469,6 @@ Internet-Draft                    codcp                        June 2022
    The purpose of this option is to deal with badly implemented proxies
    that forward DNS traffic without first removing any EDNS(0) options.
    The option requests the DNS proxy that processes the option to report
-
-
-
-Homburg                  Expires 5 December 2022                [Page 8]
-
-Internet-Draft                    codcp                        June 2022
-
-
    the scope of the source address.  The application can specify that
    the connection between the stub resolver and the proxy should have,
    for example, at most host local scope.
@@ -479,6 +498,14 @@ Internet-Draft                    codcp                        June 2022
       Lenght of this option excluding the OPTION-CODE and OPTION-LENGTH
       fields
 
+
+
+
+Homburg                  Expires 5 December 2022                [Page 9]
+
+Internet-Draft                    codcp                        June 2022
+
+
    ANCHORS-XML-LENGTH
       Length of ANCHORS-XML in network byte order
 
@@ -494,17 +521,6 @@ Internet-Draft                    codcp                        June 2022
    This option provides DNSSEC trust anchors as described in [RFC7958].
 
 8.  Protocol Specification
-
-
-
-
-
-
-
-Homburg                  Expires 5 December 2022                [Page 9]
-
-Internet-Draft                    codcp                        June 2022
-
 
 9.  Client Processing
 
@@ -539,6 +555,13 @@ Internet-Draft                    codcp                        June 2022
    SCOPE options as described in this document and optionally sets the
    response code to BADPROXYPOLICY specified policy.
 
+
+
+Homburg                  Expires 5 December 2022               [Page 10]
+
+Internet-Draft                    codcp                        June 2022
+
+
 9.2.  Trust Anchor
 
    In the ideal case, the host operating system provides applications
@@ -549,18 +572,6 @@ Internet-Draft                    codcp                        June 2022
    requests to data.iana.org to obtain the trust anchor XML file and the
    signature over the trust anchor.  For this reason, it makes sense to
    let the proxy cache this information.
-
-
-
-
-
-
-
-
-Homburg                  Expires 5 December 2022               [Page 10]
-
-Internet-Draft                    codcp                        June 2022
-
 
    If the local operating system does not provide a DNSSEC trust anchor,
    then the application can ask the proxy.  The stub resolver adds the
@@ -596,6 +607,17 @@ Internet-Draft                    codcp                        June 2022
    recursive resolvers then the proxy generates options with the
    properties of those connection, with a maximum of three connections.
 
+
+
+
+
+
+
+Homburg                  Expires 5 December 2022               [Page 11]
+
+Internet-Draft                    codcp                        June 2022
+
+
    If the proxy finds a PROXY SCOPE Option, then it calculates the scope
    from the source address.  If the scope is larger then specified in
    the option, then the proxy returns a BADPROXYPOLICY response code.
@@ -609,14 +631,6 @@ Internet-Draft                    codcp                        June 2022
    cache this information.  [RFC7958] Does not describe how long these
    documents can be cache.  A simple solution is to take the Expires
    header in the HTTP reply.
-
-
-
-
-Homburg                  Expires 5 December 2022               [Page 11]
-
-Internet-Draft                    codcp                        June 2022
-
 
 11.  Connection Between Stub Resolver And Proxy
 
@@ -652,6 +666,14 @@ Internet-Draft                    codcp                        June 2022
    IANA has assigned the following DNS response code as an early
    allocation per [RFC7120]:
 
+
+
+
+Homburg                  Expires 5 December 2022               [Page 12]
+
+Internet-Draft                    codcp                        June 2022
+
+
     RCODE    Name             Description                   Reference
    -------- ---------------- ----------------------------- -----------
     TBD      BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
@@ -662,17 +684,6 @@ Internet-Draft                    codcp                        June 2022
    feedback.
 
 15.  Normative References
-
-
-
-
-
-
-
-Homburg                  Expires 5 December 2022               [Page 12]
-
-Internet-Draft                    codcp                        June 2022
-
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -698,6 +709,10 @@ Internet-Draft                    codcp                        June 2022
               Trust Anchors", STD 74, RFC 5011, DOI 10.17487/RFC5011,
               September 2007, <https://www.rfc-editor.org/info/rfc5011>.
 
+   [RFC5625]  Bellis, R., "DNS Proxy Implementation Guidelines",
+              BCP 152, RFC 5625, DOI 10.17487/RFC5625, August 2009,
+              <https://www.rfc-editor.org/info/rfc5625>.
+
    [RFC6891]  Damas, J., Graff, M., and P. Vixie, "Extension Mechanisms
               for DNS (EDNS(0))", STD 75, RFC 6891,
               DOI 10.17487/RFC6891, April 2013,
@@ -706,6 +721,14 @@ Internet-Draft                    codcp                        June 2022
    [RFC7120]  Cotton, M., "Early IANA Allocation of Standards Track Code
               Points", BCP 100, RFC 7120, DOI 10.17487/RFC7120, January
               2014, <https://www.rfc-editor.org/info/rfc7120>.
+
+
+
+
+Homburg                  Expires 5 December 2022               [Page 13]
+
+Internet-Draft                    codcp                        June 2022
+
 
    [RFC7540]  Belshe, M., Peon, R., and M. Thomson, Ed., "Hypertext
               Transfer Protocol Version 2 (HTTP/2)", RFC 7540,
@@ -722,14 +745,6 @@ Internet-Draft                    codcp                        June 2022
               RFC 7958, DOI 10.17487/RFC7958, August 2016,
               <https://www.rfc-editor.org/info/rfc7958>.
 
-
-
-
-Homburg                  Expires 5 December 2022               [Page 13]
-
-Internet-Draft                    codcp                        June 2022
-
-
    [RFC8484]  Hoffman, P. and P. McManus, "DNS Queries over HTTPS
               (DoH)", RFC 8484, DOI 10.17487/RFC8484, October 2018,
               <https://www.rfc-editor.org/info/rfc8484>.
@@ -744,21 +759,6 @@ Author's Address
    Philip Homburg
 
    Email: philip@nlnetlabs.nl
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
