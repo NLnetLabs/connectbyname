@@ -111,8 +111,7 @@ Important however, is that an untrusted proxy cannot provide an application
 with a traditional (unsigned) trust anchor.
 
 For the transport configuration we expect three levels of details. The
-first is a choice between anythings goes, unauthenticated encryption and
-authenticated encryption. The second level is where the application also
+first is a choice between requiring authenticated encryption, also allowing unauthenticated encryption or doing opportunistic encryption on an best effort basis. The second level is where the application also
 specifies the names and/or IP addresses of upstream resolvers. The
 third level is where the application also specifies which transports
 (Do53, DoT, DoH, DoQ) are allowed to be used. A final transport parameter
