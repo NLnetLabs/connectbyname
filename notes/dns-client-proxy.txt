@@ -311,7 +311,8 @@ Internet-Draft                    codcp                        June 2022
 
    Addr Length
       length of the addresses in octets.  Must be a multiple of 4 for
-      IPv4 and a multiple of 16 for IPv6
+      IPv4 and a multiple of 16 for IPv6.  This field can be zero if no
+      addresses are specified.
 
    IPv4 or IPv6-address(es)
       list of IPv4 or IPv6 addresses
@@ -323,13 +324,12 @@ Internet-Draft                    codcp                        June 2022
       domain name for authentication or resolving IP addresses
 
    SvcParams Length
-      length of SvcParams
+      length of SvcParams.  Zero if there are no service parameters
+      specified.
 
    SvcParams
       Service parameters
 
-   Interface Name Length
-      length of Interface Name
 
 
 
@@ -337,6 +337,9 @@ Homburg                  Expires 9 December 2022                [Page 6]
 
 Internet-Draft                    codcp                        June 2022
 
+
+   Interface Name Length
+      length of Interface Name.  Zero if no interface is specified.
 
    Interface Name
       name of outgoing interface for transport connections
@@ -381,11 +384,8 @@ Internet-Draft                    codcp                        June 2022
    *  no transports are in the pool of potentially usable transports
    *  A53, AT, AH2, AH3 and AQ add those transports to the pool
 
-   Finally, an application can specify its own resolvers or rely on the
-   resolvers that are know to the proxy.  If ADN Length and Addr Length
-   are both zero, then the application requests to resolvers known to
-   the proxy.  [Note: it is unclear at the moment what to do with any
-   Service Parameters]
+
+
 
 
 
@@ -393,6 +393,12 @@ Homburg                  Expires 9 December 2022                [Page 7]
 
 Internet-Draft                    codcp                        June 2022
 
+
+   Finally, an application can specify its own resolvers or rely on the
+   resolvers that are know to the proxy.  If ADN Length and Addr Length
+   are both zero, then the application requests to resolvers known to
+   the proxy.  [Note: it is unclear at the moment what to do with any
+   Service Parameters]
 
    If the application specifies only an authentication-domain-name then
    the proxy is expected to resolve the name to addresses.  If only
@@ -435,12 +441,6 @@ Internet-Draft                    codcp                        June 2022
    Scope
       Scope of the source address of a request.  Scope can have the
       following values:
-
-
-
-
-
-
 
 
 
