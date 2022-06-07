@@ -252,7 +252,8 @@ Addr Type
 Addr Length
 
 : length of the addresses in octets. Must be a multiple of 4 for IPv4 and
-a multiple of 16 for IPv6
+a multiple of 16 for IPv6. This field can be zero if no addresses are
+specified.
 
 IPv4 or IPv6-address(es)
 
@@ -268,7 +269,7 @@ Domain Name
 
 SvcParams Length
 
-: length of SvcParams
+: length of SvcParams. Zero if there are no service parameters specified.
 
 SvcParams
 
@@ -276,7 +277,7 @@ SvcParams
 
 Interface Name Length
 
-: length of Interface Name
+: length of Interface Name. Zero if no interface is specified.
 
 Interface Name
 
