@@ -75,16 +75,16 @@ Table of Contents
    7.  TRUST ANCHOR OPTION . . . . . . . . . . . . . . . . . . . . .   9
    8.  Protocol Specification  . . . . . . . . . . . . . . . . . . .  10
    9.  Client Processing . . . . . . . . . . . . . . . . . . . . . .  10
-     9.1.  Probing . . . . . . . . . . . . . . . . . . . . . . . . .  10
+     9.1.  Probing . . . . . . . . . . . . . . . . . . . . . . . . .  11
      9.2.  Trust Anchor  . . . . . . . . . . . . . . . . . . . . . .  11
-   10. Server Processing . . . . . . . . . . . . . . . . . . . . . .  11
+   10. Server Processing . . . . . . . . . . . . . . . . . . . . . .  12
    11. Connection Between Stub Resolver And Proxy  . . . . . . . . .  12
-   12. Security Considerations . . . . . . . . . . . . . . . . . . .  12
-   13. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  12
+   12. Security Considerations . . . . . . . . . . . . . . . . . . .  13
+   13. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  13
    14. Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  13
    15. Normative References  . . . . . . . . . . . . . . . . . . . .  13
    16. Informative References  . . . . . . . . . . . . . . . . . . .  13
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  14
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  15
 
 1.  Definitions
 
@@ -413,6 +413,19 @@ Internet-Draft                    codcp                        June 2022
    specify both IPv4 and IPv6 addresses for a certain authentication-
    domain-name then it has to include two options.
 
+   An application may want to specify a DNS resolver that is reachable
+   through an IPv6 link-local address.  IPv6 link-local addresses are
+   special in that they require a zone to be specified, either
+   explicitly or implicitly.  Typically for a link-local address that
+   appears as a source or destination address, the zone is implicitly
+   the zone of the link the packet travels on.  For packets that travel
+   between hosts, there is no goed way to explictly specify the zone of
+   a link-local address because two different hosts do not agree on zone
+   names.  However, if the proxy is on the same host as the application,
+   then the zone identifier for the link-local address can be specified
+   in the Interface field.  For this purpose an interface name can also
+   be an interface index expressed as a decimal string.
+
    When present, Service Parameters specify how to connect.  Otherwise
    it is up to the proxy to try various possibilities.
 
@@ -422,6 +435,20 @@ Internet-Draft                    codcp                        June 2022
    it can do.
 
 6.  PROXY SCOPE OPTION
+
+
+
+
+
+
+
+
+
+
+Homburg                  Expires 9 December 2022                [Page 8]
+
+Internet-Draft                    codcp                        June 2022
+
 
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     0: |                          OPTION-CODE                          |
@@ -441,14 +468,6 @@ Internet-Draft                    codcp                        June 2022
    Scope
       Scope of the source address of a request.  Scope can have the
       following values:
-
-
-
-
-Homburg                  Expires 9 December 2022                [Page 8]
-
-Internet-Draft                    codcp                        June 2022
-
 
                             +=======+============+
                             | Value | Scope      |
@@ -475,6 +494,18 @@ Internet-Draft                    codcp                        June 2022
 
 7.  TRUST ANCHOR OPTION
 
+
+
+
+
+
+
+
+Homburg                  Expires 9 December 2022                [Page 9]
+
+Internet-Draft                    codcp                        June 2022
+
+
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     0: |                          OPTION-CODE                          |
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
@@ -497,14 +528,6 @@ Internet-Draft                    codcp                        June 2022
    OPTION-LENGTH
       Lenght of this option excluding the OPTION-CODE and OPTION-LENGTH
       fields
-
-
-
-
-Homburg                  Expires 9 December 2022                [Page 9]
-
-Internet-Draft                    codcp                        June 2022
-
 
    ANCHORS-XML-LENGTH
       Length of ANCHORS-XML in network byte order
@@ -531,6 +554,14 @@ Internet-Draft                    codcp                        June 2022
    requests, the Scope field is set to largest scope that the
    application can accept.
 
+
+
+
+Homburg                  Expires 9 December 2022               [Page 10]
+
+Internet-Draft                    codcp                        June 2022
+
+
    If the stub resolver receives a reply without a PROXY CONTROL Option
    included in the reply, then stub resolver has to assume that traffic
    will have Do53 levels of privacy.  Similarly, a lack of a PROXY SCOPE
@@ -555,13 +586,6 @@ Internet-Draft                    codcp                        June 2022
    SCOPE options as described in this document and optionally sets the
    response code to BADPROXYPOLICY specified policy.
 
-
-
-Homburg                  Expires 9 December 2022               [Page 10]
-
-Internet-Draft                    codcp                        June 2022
-
-
 9.2.  Trust Anchor
 
    In the ideal case, the host operating system provides applications
@@ -579,6 +603,20 @@ Internet-Draft                    codcp                        June 2022
    If the proxy returns both an ANCHORS-XML and an ANCHORS-P7S, then the
    application verifies the trust anchor using the trust anchor
    certificate (which needs to come with the application).
+
+
+
+
+
+
+
+
+
+
+Homburg                  Expires 9 December 2022               [Page 11]
+
+Internet-Draft                    codcp                        June 2022
+
 
 10.  Server Processing
 
@@ -607,17 +645,6 @@ Internet-Draft                    codcp                        June 2022
    recursive resolvers then the proxy generates options with the
    properties of those connection, with a maximum of three connections.
 
-
-
-
-
-
-
-Homburg                  Expires 9 December 2022               [Page 11]
-
-Internet-Draft                    codcp                        June 2022
-
-
    If the proxy finds a PROXY SCOPE Option, then it calculates the scope
    from the source address.  If the scope is larger then specified in
    the option, then the proxy returns a BADPROXYPOLICY response code.
@@ -638,6 +665,14 @@ Internet-Draft                    codcp                        June 2022
    standard SHOULD connect to the proxy using Do53 and as remote address
    either ::1 or 127.0.0.1.  In particular, the stub resolver SHOULD
    avoid using name servers listed in files such as /etc/resolv.conf.
+
+
+
+
+Homburg                  Expires 9 December 2022               [Page 12]
+
+Internet-Draft                    codcp                        June 2022
+
 
    The reason for this is to simplify the integration of local DNS
    proxies in existing environments.  If the stub resolver ignores /etc/
@@ -666,14 +701,6 @@ Internet-Draft                    codcp                        June 2022
    IANA has assigned the following DNS response code as an early
    allocation per [RFC7120]:
 
-
-
-
-Homburg                  Expires 9 December 2022               [Page 12]
-
-Internet-Draft                    codcp                        June 2022
-
-
     RCODE    Name             Description                   Reference
    -------- ---------------- ----------------------------- -----------
     TBD      BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
@@ -695,6 +722,13 @@ Internet-Draft                    codcp                        June 2022
               May 2017, <https://www.rfc-editor.org/info/rfc8174>.
 
 16.  Informative References
+
+
+
+Homburg                  Expires 9 December 2022               [Page 13]
+
+Internet-Draft                    codcp                        June 2022
+
 
    [RFC1035]  Mockapetris, P., "Domain names - implementation and
               specification", STD 13, RFC 1035, DOI 10.17487/RFC1035,
@@ -722,14 +756,6 @@ Internet-Draft                    codcp                        June 2022
               Points", BCP 100, RFC 7120, DOI 10.17487/RFC7120, January
               2014, <https://www.rfc-editor.org/info/rfc7120>.
 
-
-
-
-Homburg                  Expires 9 December 2022               [Page 13]
-
-Internet-Draft                    codcp                        June 2022
-
-
    [RFC7540]  Belshe, M., Peon, R., and M. Thomson, Ed., "Hypertext
               Transfer Protocol Version 2 (HTTP/2)", RFC 7540,
               DOI 10.17487/RFC7540, May 2015,
@@ -748,6 +774,17 @@ Internet-Draft                    codcp                        June 2022
    [RFC8484]  Hoffman, P. and P. McManus, "DNS Queries over HTTPS
               (DoH)", RFC 8484, DOI 10.17487/RFC8484, October 2018,
               <https://www.rfc-editor.org/info/rfc8484>.
+
+
+
+
+
+
+
+Homburg                  Expires 9 December 2022               [Page 14]
+
+Internet-Draft                    codcp                        June 2022
+
 
    [RFC9000]  Iyengar, J., Ed. and M. Thomson, Ed., "QUIC: A UDP-Based
               Multiplexed and Secure Transport", RFC 9000,
@@ -781,4 +818,23 @@ Author's Address
 
 
 
-Homburg                  Expires 9 December 2022               [Page 14]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Homburg                  Expires 9 December 2022               [Page 15]
