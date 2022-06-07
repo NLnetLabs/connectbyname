@@ -338,7 +338,21 @@ specified addresses and use the name for authentication.
 To simplify the encoding of the option, an option with addresses will
 have either IPv4 or IPv6 addresses. If the application wants to specify
 both IPv4 and IPv6 addresses for a certain authentication-domain-name
-then it has to include two options.
+then it has to include two options. 
+
+An application may want to specify a DNS resolver that is reachable 
+through an IPv6 link-local address.
+IPv6 link-local addresses are special in that they require a zone to be
+specified, either explicitly or implicitly. Typically for a link-local
+address that appears as a source or destination address,
+the zone is implicitly the zone of the link the packet travels on.
+For packets that travel between hosts, there is no goed way to explictly
+specify the zone of a link-local address because two different hosts
+do not agree on zone names. However, if the proxy is on the same host
+as the application, then the zone identifier for the link-local address
+can be specified in the Interface field. For this purpose an interface
+name can also be an interface index expressed as a decimal string.
+
 
 When present, Service Parameters specify how to connect. Otherwise it is
 up to the proxy to try various possibilities.
