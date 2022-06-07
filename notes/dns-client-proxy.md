@@ -342,6 +342,10 @@ then it has to include two options.
 When present, Service Parameters specify how to connect. Otherwise it is
 up to the proxy to try various possibilities.
 
+Associated with this option is a new error, BADPROXYPOLICY. When
+a proxy cannot meet the requirement in a PROXY CONTROL option, it returns
+this error along with a PROXY CONTROL option that lists what it can do.
+
 # PROXY SCOPE OPTION
 
 ~~~

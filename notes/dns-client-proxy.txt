@@ -3,9 +3,9 @@
 
 
 ADD                                                         P.C. Homburg
-Internet-Draft                                               3 June 2022
+Internet-Draft                                               7 June 2022
 Intended status: Standards Track                                        
-Expires: 5 December 2022
+Expires: 9 December 2022
 
 
                  Control Options For DNS Client Proxies
@@ -40,7 +40,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 5 December 2022.
+   This Internet-Draft will expire on 9 December 2022.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Homburg                  Expires 5 December 2022                [Page 1]
+Homburg                  Expires 9 December 2022                [Page 1]
 
 Internet-Draft                    codcp                        June 2022
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Homburg                  Expires 5 December 2022                [Page 2]
+Homburg                  Expires 9 December 2022                [Page 2]
 
 Internet-Draft                    codcp                        June 2022
 
@@ -165,7 +165,7 @@ Internet-Draft                    codcp                        June 2022
 
 
 
-Homburg                  Expires 5 December 2022                [Page 3]
+Homburg                  Expires 9 December 2022                [Page 3]
 
 Internet-Draft                    codcp                        June 2022
 
@@ -221,7 +221,7 @@ Internet-Draft                    codcp                        June 2022
 
 
 
-Homburg                  Expires 5 December 2022                [Page 4]
+Homburg                  Expires 9 December 2022                [Page 4]
 
 Internet-Draft                    codcp                        June 2022
 
@@ -277,7 +277,7 @@ Internet-Draft                    codcp                        June 2022
 
 
 
-Homburg                  Expires 5 December 2022                [Page 5]
+Homburg                  Expires 9 December 2022                [Page 5]
 
 Internet-Draft                    codcp                        June 2022
 
@@ -333,7 +333,7 @@ Internet-Draft                    codcp                        June 2022
 
 
 
-Homburg                  Expires 5 December 2022                [Page 6]
+Homburg                  Expires 9 December 2022                [Page 6]
 
 Internet-Draft                    codcp                        June 2022
 
@@ -389,7 +389,7 @@ Internet-Draft                    codcp                        June 2022
 
 
 
-Homburg                  Expires 5 December 2022                [Page 7]
+Homburg                  Expires 9 December 2022                [Page 7]
 
 Internet-Draft                    codcp                        June 2022
 
@@ -409,6 +409,11 @@ Internet-Draft                    codcp                        June 2022
 
    When present, Service Parameters specify how to connect.  Otherwise
    it is up to the proxy to try various possibilities.
+
+   Associated with this option is a new error, BADPROXYPOLICY.  When a
+   proxy cannot meet the requirement in a PROXY CONTROL option, it
+   returns this error along with a PROXY CONTROL option that lists what
+   it can do.
 
 6.  PROXY SCOPE OPTION
 
@@ -440,12 +445,7 @@ Internet-Draft                    codcp                        June 2022
 
 
 
-
-
-
-
-
-Homburg                  Expires 5 December 2022                [Page 8]
+Homburg                  Expires 9 December 2022                [Page 8]
 
 Internet-Draft                    codcp                        June 2022
 
@@ -501,7 +501,7 @@ Internet-Draft                    codcp                        June 2022
 
 
 
-Homburg                  Expires 5 December 2022                [Page 9]
+Homburg                  Expires 9 December 2022                [Page 9]
 
 Internet-Draft                    codcp                        June 2022
 
@@ -557,7 +557,7 @@ Internet-Draft                    codcp                        June 2022
 
 
 
-Homburg                  Expires 5 December 2022               [Page 10]
+Homburg                  Expires 9 December 2022               [Page 10]
 
 Internet-Draft                    codcp                        June 2022
 
@@ -613,7 +613,7 @@ Internet-Draft                    codcp                        June 2022
 
 
 
-Homburg                  Expires 5 December 2022               [Page 11]
+Homburg                  Expires 9 December 2022               [Page 11]
 
 Internet-Draft                    codcp                        June 2022
 
@@ -669,7 +669,7 @@ Internet-Draft                    codcp                        June 2022
 
 
 
-Homburg                  Expires 5 December 2022               [Page 12]
+Homburg                  Expires 9 December 2022               [Page 12]
 
 Internet-Draft                    codcp                        June 2022
 
@@ -725,7 +725,7 @@ Internet-Draft                    codcp                        June 2022
 
 
 
-Homburg                  Expires 5 December 2022               [Page 13]
+Homburg                  Expires 9 December 2022               [Page 13]
 
 Internet-Draft                    codcp                        June 2022
 
@@ -781,4 +781,4 @@ Author's Address
 
 
 
-Homburg                  Expires 5 December 2022               [Page 14]
+Homburg                  Expires 9 December 2022               [Page 14]
