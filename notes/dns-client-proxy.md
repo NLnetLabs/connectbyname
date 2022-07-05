@@ -77,6 +77,10 @@ Interface Name
 In addition, an interface index converted to a decimal number is also
 consider an interface name.
 
+PKIX
+
+: Public-Key Infrastructure using X.509. See [@RFC5280]
+
 # Introduction
 
 The introduction of many new transport protocols for DNS in recent years
@@ -117,7 +121,7 @@ third level is where the application also specifies which transports
 (Do53, DoT, DoH, DoQ) are allowed to be used. A final transport parameter
 is the outgoing interface that is to be used.
 
-For authentication we can have a mix of PKI and DANE. Options are one of
+For authentication we can have a mix of PKIX and DANE. Options are one of
 the two and not the other, both or one of the two.
 
 In a response, the proxy reports the interface, resolver, and transport
@@ -128,23 +132,21 @@ may just forward DNS packets without handling of EDNS(0) options.
 So what could happen is that an application sends a privacy sensitive
 request to local proxy,
 expecting the proxy upstream connection to be encrypted. However, a simple
-proxy may just forward the request unencrypted to another proxy, for exmaple,
+proxy may just forward the request unencrypted to another proxy, for example,
 one in a CPE that does implement the protocol described in this document. So
 what could happen is that the request travels unencrypted over a local lan,
 or if proxies deeper in the network support this protocol, even further
 without the application noticing that something is wrong.
 
-To handle this case, we introduce an option that limits the connection between
-the stub resolver and the proxy to host-local, link-local, or site-local. The
-requirement on a conforming DNS client proxy is to
-check where a request comes from and compare this to the option in
-the request (if any). An error is returned if there is a mismatch.
+To handle this case, we introduce an option where the proxy reports
+whether the connection between the stub resolver and the proxy is
+host-local, link-local, or site-local or global.
 
 In the ideal case, the host operating system provides applications with a
 secure way to access a DNSSEC trust anchor that is maintained according to
 [@RFC5011]. However in situations where this is not the case, an application
 can fall back to [@RFC7958]. However, for short lived processes, there is
-considerable overhead in issuing to HTTP(S) requests to data.iana.org to
+considerable overhead in issuing two HTTP(S) requests to data.iana.org to
 obtain the trust anchor XML file and the signature over the trust anchor.
 For this reason, it makes sense to let the proxy cache this information.
 
@@ -157,16 +159,18 @@ when, and only when, they appear in all capitals, as shown here.
 
 # Description
 
-This document introduces the new EDNS(0) options, and one new response code.
+This document introduces three new EDNS(0) options, and one new response code.
 This first option, called PROXY CONTROL Option, specifies which transports
 a proxy should use to connect to a recursive resolver.
 
-The second option, called PROXY SCOPE Option, controls the IP address scope
+The second option, called PROXY SCOPE Option, reports the IP address scope
 of the connection between the application's stub resolver and the proxy.
 
 Finally, the TRUST ANCHOR Option, provides the application with a DNSSEC
 trust anchor signed by IANA.
 
+The BADPROXYPOLICY error is returned the proxy cannot meet the requirements
+in a PROXY CONTROL Option or the option is malformed.
 
 # PROXY CONTROL OPTION
 
@@ -176,7 +180,7 @@ trust anchor signed by IANA.
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
    2: |                         OPTION-LENGTH                         |
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   4: | U |UA | A | P | D |DO |                     Z                 |
+   4: | U |UA | A | P | D |DD |                     Z                 |
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
    6: |A53|D53|AT |DT |AH2|DH2|AH3|DH3|AQ |DQ |         Z             |
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -207,7 +211,7 @@ OPTION-CODE
 
 OPTION-LENGTH
 
-: Lenght of this option excluding the OPTION-CODE and OPTION-LENGTH fields
+: Length of this option excluding the OPTION-CODE and OPTION-LENGTH fields
 
 U
 
@@ -223,15 +227,16 @@ A
 
 P
 
-: authenticate using a PKI certificate
+: authenticate using a PKIX certificate
 
 D
 
 : authenticate using DANE
 
-DO
+DD
 
-: disallow other transports (transports that are not explicitly listed)
+: by default disallow other transports
+(transports that are not explicitly listed)
 
 A53,AT,AH2,AH3,AQ
 
@@ -247,7 +252,8 @@ Z
 
 Addr Type
 
-: Type of addresses, IPv4 or IPv6
+: Type of addresses, The value 0 if no addresses are included, the value 1 for
+IPv4, and the value 2 for IPv6.
 
 Addr Length
 
@@ -265,7 +271,8 @@ Domain Name Length
 
 Domain Name
 
-: domain name for authentication or resolving IP addresses
+: domain name for authentication or resolving IP addresses. The domain name
+is encoding in uncompressed DNS wire format.
 
 SvcParams Length
 
@@ -284,17 +291,76 @@ Interface Name
 : name of outgoing interface for transport connections
 
 This option is designed to give control over what level of detail it
-wants to specify. The first 5 flags (U, UA, A, P, and D) give generate
+wants to specify. The first 5 flags (U, UA, A, P, and D) give general
 requirements for properties of DNS transports that are used by the
-client proxy. The U flag specifies no encryption, the UA flag, at
-least unauthenticated encryption and the A flag require authenticated
-encryptions. With the U, UA, and A flags clear, an effort is made to
-reach authenticated encryption, if that fails unauthenticated encryption
-and if that fails, fall back to an unencrypted transport.
+client proxy.
+The U, UA, and A flags are mutually exclusive. If more than one
+flag is set, the proxy SHOULD return a BADPROXYPOLICY error.
+There are four possibilities:
+
+U = 0, UA = 0, A = 0
+
+: An effort is made to reach authenticated encryption, if that fails,
+unauthenticated encryption is tried. If that also fails, the proxy
+resorts to an unencrypted transport. 
+It is an error
+if either or both of the P or D flags is set and the proxy SHOULD
+return a BADPROXYPOLICY error.
+
+U = 1, UA = 0, A = 0
+
+: The proxy only tries only unencrypted transports.
+It is an error
+if either or both of the P or D flags is set and the proxy SHOULD return a
+BADPROXYPOLICY error.
+
+U = 0, UA = 1, A = 0
+
+: An effort is made to reach authenticated encryption, if that fails,
+unauthenticated encryption is tried. 
+It is an error
+if either or both of the P or D flags is set and the proxy SHOULD return a
+BADPROXYPOLICY error.
+
+U = 0, UA = 0, A = 1
+
+: The proxy only tries authenticated encryption. The P and D flags can be
+set to control which authentication mechanism has to be used.
+
 The P and D flags allow the application to require
-a specific authentication mechanism (PKI or DANE). When both flags are set,
-PKI and DANE are required together. If no flags are set, are least one of
-the two has to succeed if authenticated encryption is required.
+a specific authentication mechanism (PKIX or DANE). The meaning of the 
+flags is the following: 
+
+P = 0, D = 0
+
+: At least one of the two mechanisms has to validate for authenticated
+encryption to succeed.
+
+P = 1, D = 0
+
+: PKIX validation has to succeed, the status of DANE validation is ignored.
+
+P = 0, D = 1
+
+: A DANE record has to be present and be DNSSEC valid. 
+A DANE record has
+a Certificate Usage Field. For some values of this field (the values zero
+and one), DANE requires PKIX validation.
+In those cases, PKIX validation is also required according to the DANE
+specifications. For the values two and three, DANE does not require
+PKIX and because the P flag is zero, the result of PKIX validation has to
+be ignored.
+
+P = 1, D = 1
+
+: Both PKIX and DANE are required together. For PKIX, this means that
+PKIX validation has to succeed. For DANE it means that a DANE record 
+has to be present and be DNSSEC valid. Validation using the DANE record
+has to succeed. 
+
+Note that these two flags can only be used in combination with the A
+flag. The proxy SHOULD return a BADPROXYPOLICY error if either or both of the 
+P or D flags is set and the A flag is clear.
 
 The next flags provide more detailed control over which transports
 should be used or not. For each of 5 different transports
@@ -304,36 +370,37 @@ transport. There is space to add more transports later. Note that setting
 the A flags and the D flag for a protocol (for example, setting both the
 A53 and the D53 flags) is not allowed and a proxy SHOULD reject such a request.
 
-To future proof applications, there is a single flag DO, that disallows
-transports that are not explicitly listed. With this flag clear,
-the application allows future transports. With the flag set, the
+To future proof applications, there is a single flag DD, that by default
+disallows transports that are not explicitly listed. With this flag clear,
+the application allows all transports that are not explicitly disallowed
+(including future transports). With the flag set, the
 application has to explicitly list which transports can be used.
-For example, by setting only DO and AT, the application forces the
+For example, by setting only DD and AT, the application forces the
 use of DoT.
 
-When DO = 0:
+When DD = 0:
 
 * all transports are in the pool of potentially usable transports
 * D53, DT, DH2, DH3 and DQ remove those transports from the pool
 
-When DO = 1:
+When DD = 1:
 
 * no transports are in the pool of potentially usable transports
 * A53, AT, AH2, AH3 and AQ add those transports to the pool
 
 
 Finally, an application can specify its own resolvers or rely on the
-resolvers that are know to the proxy. If ADN Length and Addr Length
-are both zero, then the application requests to resolvers known to
+resolvers that are known to the proxy. If ADN Length and Addr Length
+are both zero, then the application requests the resolvers known to
 the proxy. [Note: it is unclear at the moment what to do with any
 Service Parameters]
 
 If the application specifies only an authentication-domain-name then the
 proxy is expected to resolve the name to addresses. If only addresses
 are specified then the proxy assumes that no name is known (though
-a PKI certificate may include an address literal in the subjectAltName).
+a PKIX certificate may include an address literal in the subjectAltName).
 If both a name and address are specified then the proxy will use the
-specified addresses and use the name for authentication.
+specified address and use the name for authentication.
 
 To simplify the encoding of the option, an option with addresses will
 have either IPv4 or IPv6 addresses. If the application wants to specify
@@ -355,11 +422,13 @@ name can also be an interface index expressed as a decimal string.
 
 
 When present, Service Parameters specify how to connect. Otherwise it is
-up to the proxy to try various possibilities.
+up to the proxy to try various possibilities. For Service Parameters,
+the values of the ipv4hint and ipv6hint fields are ignored. Addresses
+can only be specified using the addresses field in the PROXY CONTROL Option.
 
 Associated with this option is a new error, BADPROXYPOLICY. When
-a proxy cannot meet the requirement in a PROXY CONTROL option, it returns
-this error along with a PROXY CONTROL option that lists what it can do.
+a proxy cannot meet the requirements in a PROXY CONTROL Option or the
+option is malformed, it returns this error.
 
 # PROXY SCOPE OPTION
 
@@ -395,11 +464,10 @@ values:
      3     | Site local
      4     | Global
 
-The purpose of this option is to deal with badly implemented proxies that forward
+The purpose of this option is to deal with proxies that forward
 DNS traffic without first removing any EDNS(0) options. The option requests
 the DNS proxy that processes the option to report the scope of the source
-address. The application can specify that the connection between the stub
-resolver and the proxy should have, for example, at most host local scope.
+address. 
 
 # TRUST ANCHOR OPTION
 
@@ -428,7 +496,7 @@ OPTION-CODE
 
 OPTION-LENGTH
 
-: Lenght of this option excluding the OPTION-CODE and OPTION-LENGTH fields
+: Length of this option excluding the OPTION-CODE and OPTION-LENGTH fields
 
 ANCHORS-XML-LENGTH
 
@@ -448,16 +516,15 @@ ANCHORS-P7S
 
 This option provides DNSSEC trust anchors as described in [@RFC7958].
 
-
 # Protocol Specification
 
-# Client Processing
+## Client Processing
 
 A stub resolver that wishes to use the PROXY CONTROL Option includes the
 option in all outgoing DNS requests that require privacy. The option
 should be initialized according to the needs of the application.
 In addition the PROXY SCOPE Option can be added. In requests, the Scope
-field is set to largest scope that the application can accept.
+field is set to undefined.
 
 If the stub resolver receives a reply without a PROXY CONTROL Option
 included in the reply, then stub resolver has to assume that traffic will
@@ -465,42 +532,42 @@ have Do53 levels of privacy.  Similarly, a lack of a PROXY SCOPE Option
 implies a global scope.
 
 If the stub resolver receives a BADPROXYPOLICY error then the proxy was
-unable to meet the requirements of the option(s). In the reply, the proxy
-modifies the options to show what it can do.
+unable to meet the requirements of the PROXY CONTROL Option.
 
-## Probing
+### Probing
 
 In cases where the stub resolver expects a local DNS proxy, or where the
 stub resolver has (a limited) fall back to more private transports, or
 when the security policy of the application is such that is better to fail
 than send queries over Do53, the stub resolver first sends a probing
 query to verify that the proxy supports the PROXY CONTROL and
-PROXY SCOPE options.
+PROXY SCOPE Options.
 
-This request queries "resolver.arpa". The proxy MUST implement this as a
+This request queries "resolver.arpa" for SOA records.
+The proxy MUST implement this as a
 Special Use Domain Name. The actual response is not important. The
 important part is that the proxy returns PROXY CONTROL and PROXY SCOPE
-options as described in this document and optionally sets
-the response code to BADPROXYPOLICY specified policy.
+Options as described in this document or sets
+the response code to BADPROXYPOLICY if it cannot meet specified policy.
 
-## Trust Anchor
+### Trust Anchor
 
 In the ideal case, the host operating system provides applications with a
 secure way to access a DNSSEC trust anchor that is maintained according to
 [@RFC5011]. However in situations where this is not the case, an application
 can fall back to [@RFC7958]. However, for short lived processes, there is
-considerable overhead in issuing to HTTP(S) requests to data.iana.org to
+considerable overhead in issuing two HTTP(S) requests to data.iana.org to
 obtain the trust anchor XML file and the signature over the trust anchor.
 For this reason, it makes sense to let the proxy cache this information.
 
 If the local operating system does not provide a DNSSEC trust anchor, then
 the application can ask the proxy. The stub resolver adds the TRUST ANCHOR
-Option with ANCHORS-XML-LENGTH and ANCHORS-P7S-LENGTH. If the proxy
-returns both an ANCHORS-XML and an ANCHORS-P7S, then the application verifies
-the trust anchor using the trust anchor certificate (which needs to come
-with the application).
+Option with ANCHORS-XML-LENGTH and ANCHORS-P7S-LENGTH set to zero. If the
+proxy returns both an ANCHORS-XML and an ANCHORS-P7S, then the application
+verifies the trust anchor using the trust anchor certificate (which needs
+to come with the application).
 
-# Server Processing
+## Server Processing
 
 Proxies are encouraged to cache options that appear in requests under the
 assumption that a stub resolver will send multiple requests. If a proxy
@@ -515,20 +582,26 @@ The proxy SHOULD prefer more private transports over less private ones.
 
 If the proxy cannot obtain a connection to a recursive resolver in a way that
 matches the provided policy, then the proxy sets the BADPROXYPOLICY
-response code in the reply. In addition the proxy SHOULD try to find at least
-one connection to a recursive resolver. If the proxy did not find an
-alternative connection to a recursive resolver (also if it didn't try) then
-the proxy includes a PROXY CONTROL Option with all flags set to zero,
-and with  ADN Length, Addr Length, and SvcParams Length set to zero as well.
+response code in the reply. 
 
-If the proxy does have one or more alternative connections to recursive
-resolvers then the proxy generates options with the properties of those
-connection, with a maximum of three connections.
+The proxy MUST implement "resolver.arpa" as a locally served zone. 
+Proxies SHOULD respond to all queries with NODATA unless other behavior
+is specified in a different document.
+
+If the proxy successfully connects to a recursive resolver and receives a
+reply, or the query is for a special use domain name that is handled internally
+in the proxy, then the proxy add a PROXY CONTROL Options dat details the
+connection to the recursive resolver (i.e., the U, UA, or A flag depending
+on encryption and authentication, P and or D for authenticated connections,
+A53, AT, AH2, AH3, or AQ depending on the transport (or none of those for a
+future transport). Furthermore the proxy includes the address it 
+connected to, the Domain Name if known, any Service Parameters and
+the outgoing interface name if known.
 
 If the proxy finds a PROXY SCOPE Option, then it calculates the scope from
-the source address. If the scope is larger then specified in the option,
-then the proxy returns a BADPROXYPOLICY response code. The proxy sets the value of
-Scope to the actual scope of the source address of the request.
+the source address. The proxy adds a PROXY SCOPE Option to a reply and
+sets the value of Scope to the actual scope of the source address of the
+request.
 
 If the request contains a TRUST ANCHOR Option, then the proxy tries to
 fetch the trust anchor XML and p7s files if it does not have them already.
@@ -536,6 +609,7 @@ If fetching one or both fails then the proxy sets the corresponding
 length to zero. It is not clear how long the proxy can cache this information.
 [@RFC7958] Does not describe how long these documents can be cache.
 A simple solution is to take the Expires header in the HTTP reply.
+The proxy adds a TRUST ANCHOR Option to the reply.
 
 # Connection Between Stub Resolver And Proxy
 
@@ -555,6 +629,19 @@ as /etc/resolv.conf. However, in that case the stub resolver MUST make
 sure that doing so does not violate the policy set by the application.
 
 # Security Considerations
+
+A privacy sensitive application SHOULD first issue a SOA query for
+resolver.arpa to verify that the local proxy supports the options documented
+in the document. If the proxy does not support this document then the
+application can refrain from sending queries that reveal privacy sensitive 
+names.
+
+By setting the interface name, an application can select an outging interface
+on the proxy. Proxies should make sure that a query receives from a 
+process that is authorized to do so. By default, a proxy SHOULD allow only
+process on the same host to use this feature. If an unauthorized process
+includes an option with the interface name set, then the proxy SHOULD 
+return the BADPROXYPOLICY error.
 
 # IANA Considerations
 
