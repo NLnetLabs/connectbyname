@@ -41,7 +41,7 @@ capabilities and actual transports that are available.
 
 Do53
 
-: The original, plain text DNS transport as described in [@RFC1035].
+: The original, plain text DNS transport as described in [@RFC1034;@RFC1035].
 Typically, UDP is used, with the DNS server listening on port 53. Sometimes,
 for example, for large responses, TCP is used, also on port 53.
 
@@ -272,7 +272,7 @@ Domain Name Length
 Domain Name
 
 : domain name for authentication or resolving IP addresses. The domain name
-is encoding in uncompressed DNS wire format.
+is encoded in uncompressed DNS wire format.
 
 SvcParams Length
 
@@ -367,7 +367,7 @@ should be used or not. For each of 5 different transports
 (Do53, DoT, DoH with ALPN h2, DoH with ALPN h3, DoQ) there is a flag
 to allow (A53,AT,AH2,AH3,AQ) or disallow (D53,DT,DH2,DH3,DQ) the use of the
 transport. There is space to add more transports later. Note that setting
-the A flags and the D flag for a protocol (for example, setting both the
+the A flag and the D flag for a protocol (for example, setting both the
 A53 and the D53 flags) is not allowed and a proxy SHOULD reject such a request.
 
 To future proof applications, there is a single flag DD, that by default
@@ -381,13 +381,14 @@ use of DoT.
 When DD = 0:
 
 * all transports are in the pool of potentially usable transports
-* D53, DT, DH2, DH3 and DQ remove those transports from the pool
+* D53, DT, DH2, DH3 and DQ remove those transports from the pool.
+* The values of A53, AT, AH2, AH3 and AQ are irrelevant
 
 When DD = 1:
 
 * no transports are in the pool of potentially usable transports
 * A53, AT, AH2, AH3 and AQ add those transports to the pool
-
+* The values of D53, DT, DH2, DH3 and DQ are irrelevant
 
 Finally, an application can specify its own resolvers or rely on the
 resolvers that are known to the proxy. If ADN Length and Addr Length
@@ -429,6 +430,11 @@ can only be specified using the addresses field in the PROXY CONTROL Option.
 Associated with this option is a new error, BADPROXYPOLICY. When
 a proxy cannot meet the requirements in a PROXY CONTROL Option or the
 option is malformed, it returns this error.
+
+If the proxy returns a BADPROXYPOLICY error, the proxy MAY include
+a PROXY CONTROL Option that lists what the proxy can do. For example,
+if authenticated encryption is not possible, but unauthenticated is,
+then the proxy may include an option that has the UA bit set.
 
 # PROXY SCOPE OPTION
 

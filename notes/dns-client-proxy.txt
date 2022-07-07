@@ -3,13 +3,13 @@
 
 
 ADD                                                         P.C. Homburg
-Internet-Draft                                               5 July 2022
+Internet-Draft                                               7 July 2022
 Intended status: Standards Track                                        
-Expires: 6 January 2023
+Expires: 8 January 2023
 
 
                  Control Options For DNS Client Proxies
-                         draft-homburg-codcp-00
+                       draft-homburg-add-codcp-00
 
 Abstract
 
@@ -40,7 +40,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 6 January 2023.
+   This Internet-Draft will expire on 8 January 2023.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Homburg                  Expires 6 January 2023                 [Page 1]
+Homburg                  Expires 8 January 2023                 [Page 1]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -71,27 +71,27 @@ Table of Contents
    3.  Key Words . . . . . . . . . . . . . . . . . . . . . . . . . .   4
    4.  Description . . . . . . . . . . . . . . . . . . . . . . . . .   4
    5.  PROXY CONTROL OPTION  . . . . . . . . . . . . . . . . . . . .   5
-   6.  PROXY SCOPE OPTION  . . . . . . . . . . . . . . . . . . . . .   9
+   6.  PROXY SCOPE OPTION  . . . . . . . . . . . . . . . . . . . . .  10
    7.  TRUST ANCHOR OPTION . . . . . . . . . . . . . . . . . . . . .  10
    8.  Protocol Specification  . . . . . . . . . . . . . . . . . . .  11
      8.1.  Client Processing . . . . . . . . . . . . . . . . . . . .  11
-       8.1.1.  Probing . . . . . . . . . . . . . . . . . . . . . . .  11
+       8.1.1.  Probing . . . . . . . . . . . . . . . . . . . . . . .  12
        8.1.2.  Trust Anchor  . . . . . . . . . . . . . . . . . . . .  12
-     8.2.  Server Processing . . . . . . . . . . . . . . . . . . . .  12
-   9.  Connection Between Stub Resolver And Proxy  . . . . . . . . .  13
+     8.2.  Server Processing . . . . . . . . . . . . . . . . . . . .  13
+   9.  Connection Between Stub Resolver And Proxy  . . . . . . . . .  14
    10. Security Considerations . . . . . . . . . . . . . . . . . . .  14
    11. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  14
-   12. Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  14
-   13. Normative References  . . . . . . . . . . . . . . . . . . . .  14
+   12. Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  15
+   13. Normative References  . . . . . . . . . . . . . . . . . . . .  15
    14. Informative References  . . . . . . . . . . . . . . . . . . .  15
    Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  16
 
 1.  Definitions
 
    Do53  The original, plain text DNS transport as described in
-      [RFC1035].  Typically, UDP is used, with the DNS server listening
-      on port 53.  Sometimes, for example, for large responses, TCP is
-      used, also on port 53.
+      [RFC1034][RFC1035].  Typically, UDP is used, with the DNS server
+      listening on port 53.  Sometimes, for example, for large
+      responses, TCP is used, also on port 53.
 
    DoH  DNS over HTTPS as described in [RFC8484].
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Homburg                  Expires 6 January 2023                 [Page 2]
+Homburg                  Expires 8 January 2023                 [Page 2]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -165,7 +165,7 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 6 January 2023                 [Page 3]
+Homburg                  Expires 8 January 2023                 [Page 3]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -221,7 +221,7 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 6 January 2023                 [Page 4]
+Homburg                  Expires 8 January 2023                 [Page 4]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -277,7 +277,7 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 6 January 2023                 [Page 5]
+Homburg                  Expires 8 January 2023                 [Page 5]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -321,7 +321,7 @@ Internet-Draft                    codcp                        July 2022
 
    Domain Name
       domain name for authentication or resolving IP addresses.  The
-      domain name is encoding in uncompressed DNS wire format.
+      domain name is encoded in uncompressed DNS wire format.
 
    SvcParams Length
       length of SvcParams.  Zero if there are no service parameters
@@ -333,7 +333,7 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 6 January 2023                 [Page 6]
+Homburg                  Expires 8 January 2023                 [Page 6]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -389,7 +389,7 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 6 January 2023                 [Page 7]
+Homburg                  Expires 8 January 2023                 [Page 7]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -415,7 +415,7 @@ Internet-Draft                    codcp                        July 2022
    DoT, DoH with ALPN h2, DoH with ALPN h3, DoQ) there is a flag to
    allow (A53,AT,AH2,AH3,AQ) or disallow (D53,DT,DH2,DH3,DQ) the use of
    the transport.  There is space to add more transports later.  Note
-   that setting the A flags and the D flag for a protocol (for example,
+   that setting the A flag and the D flag for a protocol (for example,
    setting both the A53 and the D53 flags) is not allowed and a proxy
    SHOULD reject such a request.
 
@@ -430,25 +430,31 @@ Internet-Draft                    codcp                        July 2022
    When DD = 0:
 
    *  all transports are in the pool of potentially usable transports
-   *  D53, DT, DH2, DH3 and DQ remove those transports from the pool
+   *  D53, DT, DH2, DH3 and DQ remove those transports from the pool.
+   *  The values of A53, AT, AH2, AH3 and AQ are irrelevant
 
    When DD = 1:
 
    *  no transports are in the pool of potentially usable transports
    *  A53, AT, AH2, AH3 and AQ add those transports to the pool
+   *  The values of D53, DT, DH2, DH3 and DQ are irrelevant
+
+
+
+
+
+
+
+Homburg                  Expires 8 January 2023                 [Page 8]
+
+Internet-Draft                    codcp                        July 2022
+
 
    Finally, an application can specify its own resolvers or rely on the
    resolvers that are known to the proxy.  If ADN Length and Addr Length
    are both zero, then the application requests the resolvers known to
    the proxy.  [Note: it is unclear at the moment what to do with any
    Service Parameters]
-
-
-
-Homburg                  Expires 6 January 2023                 [Page 8]
-
-Internet-Draft                    codcp                        July 2022
-
 
    If the application specifies only an authentication-domain-name then
    the proxy is expected to resolve the name to addresses.  If only
@@ -486,6 +492,20 @@ Internet-Draft                    codcp                        July 2022
    proxy cannot meet the requirements in a PROXY CONTROL Option or the
    option is malformed, it returns this error.
 
+   If the proxy returns a BADPROXYPOLICY error, the proxy MAY include a
+   PROXY CONTROL Option that lists what the proxy can do.  For example,
+   if authenticated encryption is not possible, but unauthenticated is,
+   then the proxy may include an option that has the UA bit set.
+
+
+
+
+
+Homburg                  Expires 8 January 2023                 [Page 9]
+
+Internet-Draft                    codcp                        July 2022
+
+
 6.  PROXY SCOPE OPTION
 
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
@@ -498,13 +518,6 @@ Internet-Draft                    codcp                        July 2022
 
    OPTION-CODE
       To be decided
-
-
-
-Homburg                  Expires 6 January 2023                 [Page 9]
-
-Internet-Draft                    codcp                        July 2022
-
 
    OPTION-LENGTH
       Length of this option excluding the OPTION-CODE and OPTION-LENGTH
@@ -537,6 +550,18 @@ Internet-Draft                    codcp                        July 2022
 
 7.  TRUST ANCHOR OPTION
 
+
+
+
+
+
+
+
+Homburg                  Expires 8 January 2023                [Page 10]
+
+Internet-Draft                    codcp                        July 2022
+
+
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     0: |                          OPTION-CODE                          |
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
@@ -554,14 +579,6 @@ Internet-Draft                    codcp                        July 2022
    where
 
    OPTION-CODE
-
-
-
-Homburg                  Expires 6 January 2023                [Page 10]
-
-Internet-Draft                    codcp                        July 2022
-
-
       To be decided
 
    OPTION-LENGTH
@@ -592,6 +609,15 @@ Internet-Draft                    codcp                        July 2022
    application.  In addition the PROXY SCOPE Option can be added.  In
    requests, the Scope field is set to undefined.
 
+
+
+
+
+Homburg                  Expires 8 January 2023                [Page 11]
+
+Internet-Draft                    codcp                        July 2022
+
+
    If the stub resolver receives a reply without a PROXY CONTROL Option
    included in the reply, then stub resolver has to assume that traffic
    will have Do53 levels of privacy.  Similarly, a lack of a PROXY SCOPE
@@ -608,15 +634,6 @@ Internet-Draft                    codcp                        July 2022
    that is better to fail than send queries over Do53, the stub resolver
    first sends a probing query to verify that the proxy supports the
    PROXY CONTROL and PROXY SCOPE Options.
-
-
-
-
-
-Homburg                  Expires 6 January 2023                [Page 11]
-
-Internet-Draft                    codcp                        July 2022
-
 
    This request queries "resolver.arpa" for SOA records.  The proxy MUST
    implement this as a Special Use Domain Name.  The actual response is
@@ -643,6 +660,20 @@ Internet-Draft                    codcp                        July 2022
    ANCHORS-P7S, then the application verifies the trust anchor using the
    trust anchor certificate (which needs to come with the application).
 
+
+
+
+
+
+
+
+
+
+Homburg                  Expires 8 January 2023                [Page 12]
+
+Internet-Draft                    codcp                        July 2022
+
+
 8.2.  Server Processing
 
    Proxies are encouraged to cache options that appear in requests under
@@ -664,15 +695,6 @@ Internet-Draft                    codcp                        July 2022
    The proxy MUST implement "resolver.arpa" as a locally served zone.
    Proxies SHOULD respond to all queries with NODATA unless other
    behavior is specified in a different document.
-
-
-
-
-
-Homburg                  Expires 6 January 2023                [Page 12]
-
-Internet-Draft                    codcp                        July 2022
-
 
    If the proxy successfully connects to a recursive resolver and
    receives a reply, or the query is for a special use domain name that
@@ -699,6 +721,15 @@ Internet-Draft                    codcp                        July 2022
    header in the HTTP reply.  The proxy adds a TRUST ANCHOR Option to
    the reply.
 
+
+
+
+
+Homburg                  Expires 8 January 2023                [Page 13]
+
+Internet-Draft                    codcp                        July 2022
+
+
 9.  Connection Between Stub Resolver And Proxy
 
    Absent other configuration, a stub resolver that implements this
@@ -717,18 +748,6 @@ Internet-Draft                    codcp                        July 2022
    configuration methods, such as /etc/resolv.conf.  However, in that
    case the stub resolver MUST make sure that doing so does not violate
    the policy set by the application.
-
-
-
-
-
-
-
-
-Homburg                  Expires 6 January 2023                [Page 13]
-
-Internet-Draft                    codcp                        July 2022
-
 
 10.  Security Considerations
 
@@ -758,6 +777,15 @@ Internet-Draft                    codcp                        July 2022
    IANA has assigned the following DNS response code as an early
    allocation per [RFC7120]:
 
+
+
+
+
+Homburg                  Expires 8 January 2023                [Page 14]
+
+Internet-Draft                    codcp                        July 2022
+
+
     RCODE    Name             Description                   Reference
    -------- ---------------- ----------------------------- -----------
     TBD      BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
@@ -778,15 +806,11 @@ Internet-Draft                    codcp                        July 2022
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/info/rfc8174>.
 
-
-
-
-Homburg                  Expires 6 January 2023                [Page 14]
-
-Internet-Draft                    codcp                        July 2022
-
-
 14.  Informative References
+
+   [RFC1034]  Mockapetris, P., "Domain names - concepts and facilities",
+              STD 13, RFC 1034, DOI 10.17487/RFC1034, November 1987,
+              <https://www.rfc-editor.org/info/rfc1034>.
 
    [RFC1035]  Mockapetris, P., "Domain names - implementation and
               specification", STD 13, RFC 1035, DOI 10.17487/RFC1035,
@@ -811,6 +835,13 @@ Internet-Draft                    codcp                        July 2022
               BCP 152, RFC 5625, DOI 10.17487/RFC5625, August 2009,
               <https://www.rfc-editor.org/info/rfc5625>.
 
+
+
+Homburg                  Expires 8 January 2023                [Page 15]
+
+Internet-Draft                    codcp                        July 2022
+
+
    [RFC6891]  Damas, J., Graff, M., and P. Vixie, "Extension Mechanisms
               for DNS (EDNS(0))", STD 75, RFC 6891,
               DOI 10.17487/RFC6891, April 2013,
@@ -834,13 +865,6 @@ Internet-Draft                    codcp                        July 2022
               "DNSSEC Trust Anchor Publication for the Root Zone",
               RFC 7958, DOI 10.17487/RFC7958, August 2016,
               <https://www.rfc-editor.org/info/rfc7958>.
-
-
-
-Homburg                  Expires 6 January 2023                [Page 15]
-
-Internet-Draft                    codcp                        July 2022
-
 
    [RFC8484]  Hoffman, P. and P. McManus, "DNS Queries over HTTPS
               (DoH)", RFC 8484, DOI 10.17487/RFC8484, October 2018,
@@ -869,28 +893,4 @@ Author's Address
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Homburg                  Expires 6 January 2023                [Page 16]
+Homburg                  Expires 8 January 2023                [Page 16]
