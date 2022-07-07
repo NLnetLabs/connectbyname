@@ -7,7 +7,7 @@ workgroup = "ADD"
 [seriesInfo]
 status = "standard"
 name = "Internet-Draft"
-value = "draft-homburg-codcp-00"
+value = "draft-homburg-add-codcp-00"
 stream = "IETF"
 
 date = 2022-05-02T00:00:00Z
