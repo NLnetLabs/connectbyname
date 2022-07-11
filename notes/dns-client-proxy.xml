@@ -1,0 +1,645 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- name="GENERATOR" content="github.com/mmarkdown/mmark Mmark Markdown Processor - mmark.miek.nl" -->
+<rfc version="3" ipr="trust200902" docName="draft-homburg-add-codcp-00" submissionType="IETF" category="std" xml:lang="en" xmlns:xi="http://www.w3.org/2001/XInclude" indexInclude="true" consensus="true">
+
+<front>
+<title abbrev="codcp">Control Options For DNS Client Proxies</title><seriesInfo value="draft-homburg-add-codcp-00" stream="IETF" status="standard" name="Internet-Draft"></seriesInfo>
+<author initials="P.C." surname="Homburg" fullname="Philip Homburg"><organization></organization><address><postal><street></street>
+</postal><email>philip@nlnetlabs.nl</email>
+</address></author><date/>
+<area>Internet</area>
+<workgroup>ADD</workgroup>
+
+<abstract>
+<t>The introduction of many new transport protocols for DNS in recent years
+(DoT, DoH, DoQ)
+significantly increases the complexity of DNS stub
+resolvers that want to support these protocols. A practical way forward
+is to have a DNS client proxy in the host operating system. This allows
+applications to communicate using Do53 and still get the privacy
+benefit from using more secure protocols over the internet. However,
+such a setup leaves the application with no control over which transport
+the proxy uses. This document introduces EDNS(0) options that allow a
+stub resolver to request certain transport and allow the proxy to report
+capabilities and actual transports that are available.</t>
+</abstract>
+
+</front>
+
+<middle>
+
+<section anchor="definitions"><name>Definitions</name>
+
+<dl>
+<dt>Do53</dt>
+<dd><t>The original, plain text DNS transport as described in <xref target="RFC1034"></xref><xref target="RFC1035"></xref>.
+Typically, UDP is used, with the DNS server listening on port 53. Sometimes,
+for example, for large responses, TCP is used, also on port 53.</t>
+</dd>
+<dt>DoH</dt>
+<dd><t>DNS over HTTPS as described in <xref target="RFC8484"></xref>.</t>
+</dd>
+<dt>DoT</dt>
+<dd><t>DNS over TLS as described in <xref target="RFC7858"></xref></t>
+</dd>
+<dt>DoQ</dt>
+<dd><t>DNS over QUIC (<xref target="RFC9000"></xref>) as described in [I-D.ietf-dprive-dnsoquic],
+not to be confused with DNS over HTTP/3 which also uses QUIC</t>
+</dd>
+<dt>EDNS(0) Option</dt>
+<dd><t>An option as described in <xref target="RFC6891"></xref></t>
+</dd>
+<dt>h2</dt>
+<dd><t>This TLS ALPN identifies HTTP/2 as described in <xref target="RFC7540"></xref></t>
+</dd>
+<dt>h3</dt>
+<dd><t>This TLS ALPN identifies HTTP/3, which is HTTP over QUIC and
+is described in I.D.ietf-quic-http (expired draft)</t>
+</dd>
+<dt>Interface Name</dt>
+<dd><t>A name that identifies a network interface as described in <xref target="RFC3493"></xref>.
+In addition, an interface index converted to a decimal number is also
+consider an interface name.</t>
+</dd>
+<dt>PKIX</dt>
+<dd><t>Public-Key Infrastructure using X.509. See <xref target="RFC5280"></xref></t>
+</dd>
+</dl>
+</section>
+
+<section anchor="introduction"><name>Introduction</name>
+<t>The introduction of many new transport protocols for DNS in recent years
+(DoT, DoH, DoQ)
+significantly increases the complexity of DNS stub
+resolvers that want to support these protocols. In addition,
+for short-lived applications, the overhead of setting a DoH connection
+is quite high if the application only needs to send a few DNS requests.</t>
+<t>A practical way forward
+is to have a DNS client proxy in the host operating system.
+A local proxy may provide some benefit to short-lived applications by
+caching results. In particular if the system uses a so called 'public
+DNS resolver'. In general we assume that the cache is tagged according
+to the source of a reply and the transport it is received on.</t>
+<t>This allows
+applications to communicate using Do53 and still get the privacy
+benefits from using more secure protocols over the internet. However,
+such a setup leaves the application with no control over which transport
+the proxy uses. This document introduces EDNS(0) options that allow a
+stub resolver to request certain transports and allow the proxy to report
+capabilities and actual transports that are available.</t>
+<t>With respect to DNSSEC, we assume that an application that needs
+DNSSEC validation, for example, for DANE validation or SSHFP, will
+perform the DNSSEC validation within the application itself and does not
+trust the proxy. The proxy can of course do DNSSEC validation as well.
+Important however, is that an untrusted proxy cannot provide an application
+with a traditional (unsigned) trust anchor.</t>
+<t>For the transport configuration we expect three levels of details. The
+first is a choice between requiring authenticated encryption, also allowing unauthenticated encryption or doing opportunistic encryption on an best effort basis. The second level is where the application also
+specifies the names and/or IP addresses of upstream resolvers. The
+third level is where the application also specifies which transports
+(Do53, DoT, DoH, DoQ) are allowed to be used. A final transport parameter
+is the outgoing interface that is to be used.</t>
+<t>For authentication we can have a mix of PKIX and DANE. Options are one of
+the two and not the other, both or one of the two.</t>
+<t>In a response, the proxy reports the interface, resolver, and transport
+used.</t>
+<t>As described in <xref target="RFC5625" sectionFormat="bare" relative="#" section="Section 3"></xref> of <xref target="RFC5625"></xref>, some simple DNS proxies
+may just forward DNS packets without handling of EDNS(0) options.
+So what could happen is that an application sends a privacy sensitive
+request to local proxy,
+expecting the proxy upstream connection to be encrypted. However, a simple
+proxy may just forward the request unencrypted to another proxy, for example,
+one in a CPE that does implement the protocol described in this document. So
+what could happen is that the request travels unencrypted over a local lan,
+or if proxies deeper in the network support this protocol, even further
+without the application noticing that something is wrong.</t>
+<t>To handle this case, we introduce an option where the proxy reports
+whether the connection between the stub resolver and the proxy is
+host-local, link-local, or site-local or global.</t>
+<t>In the ideal case, the host operating system provides applications with a
+secure way to access a DNSSEC trust anchor that is maintained according to
+<xref target="RFC5011"></xref>. However in situations where this is not the case, an application
+can fall back to <xref target="RFC7958"></xref>. However, for short lived processes, there is
+considerable overhead in issuing two HTTP(S) requests to data.iana.org to
+obtain the trust anchor XML file and the signature over the trust anchor.
+For this reason, it makes sense to let the proxy cache this information.</t>
+</section>
+
+<section anchor="key-words"><name>Key Words</name>
+<t>The key words &quot;<bcp14>MUST</bcp14>&quot;, &quot;<bcp14>MUST NOT</bcp14>&quot;, &quot;<bcp14>REQUIRED</bcp14>&quot;, &quot;<bcp14>SHALL</bcp14>&quot;, &quot;<bcp14>SHALL NOT</bcp14>&quot;,
+&quot;<bcp14>SHOULD</bcp14>&quot;, &quot;<bcp14>SHOULD NOT</bcp14>&quot;, &quot;<bcp14>RECOMMENDED</bcp14>&quot;, &quot;<bcp14>NOT RECOMMENDED</bcp14>&quot;, &quot;<bcp14>MAY</bcp14>&quot;, and
+&quot;<bcp14>OPTIONAL</bcp14>&quot; in this document are to be interpreted as described in BCP 14 <xref target="RFC2119"></xref> <xref target="RFC8174"></xref>
+when, and only when, they appear in all capitals, as shown here.</t>
+</section>
+
+<section anchor="description"><name>Description</name>
+<t>This document introduces three new EDNS(0) options, and one new response code.
+This first option, called PROXY CONTROL Option, specifies which transports
+a proxy should use to connect to a recursive resolver.</t>
+<t>The second option, called PROXY SCOPE Option, reports the IP address scope
+of the connection between the application's stub resolver and the proxy.</t>
+<t>Finally, the TRUST ANCHOR Option, provides the application with a DNSSEC
+trust anchor signed by IANA.</t>
+<t>The BADPROXYPOLICY error is returned the proxy cannot meet the requirements
+in a PROXY CONTROL Option or the option is malformed.</t>
+</section>
+
+<section anchor="proxy-control-option"><name>PROXY CONTROL OPTION</name>
+
+<artwork>      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                          OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                         OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: | U |UA | A | P | D |DD |                     Z                 |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   6: |A53|D53|AT |DT |AH2|DH2|AH3|DH3|AQ |DQ |         Z             |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   8: |         Addr Type             |         Addr Length           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+      ~                IPv4 or IPv6-address(es)                       ~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+      |  Domain Name Length           |                               |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
+      ~                   Domain Name                                 ~
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |          SvcParams Length     |                               |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
+      ~                 SvcParams                                     ~
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |     Interface Name Length     |                               |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
+      ~                 Interface Name                                ~
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</artwork>
+<t>where</t>
+
+<dl newline="true">
+<dt>OPTION-CODE</dt>
+<dd><t>To be decided</t>
+</dd>
+<dt>OPTION-LENGTH</dt>
+<dd><t>Length of this option excluding the OPTION-CODE and OPTION-LENGTH fields</t>
+</dd>
+<dt>U</dt>
+<dd><t>force the use of unencrypted communication (Do53)</t>
+</dd>
+<dt>UA</dt>
+<dd><t>require unauthenticated encryption</t>
+</dd>
+<dt>A</dt>
+<dd><t>require authenticated encryption</t>
+</dd>
+<dt>P</dt>
+<dd><t>authenticate using a PKIX certificate</t>
+</dd>
+<dt>D</dt>
+<dd><t>authenticate using DANE</t>
+</dd>
+<dt>DD</dt>
+<dd><t>by default disallow other transports
+(transports that are not explicitly listed)</t>
+</dd>
+<dt>A53,AT,AH2,AH3,AQ</dt>
+<dd><t>allow respectively Do53, DoT, DoH H2, DoH H3, DoQ</t>
+</dd>
+<dt>D53,DT,DH2,DH3,DQ</dt>
+<dd><t>disallow respectively Do53, DoT, DoH H2, DoH H3, DoQ</t>
+</dd>
+<dt>Z</dt>
+<dd><t>reserved, MUST be zero when sending, MUST be ignored when received</t>
+</dd>
+<dt>Addr Type</dt>
+<dd><t>Type of addresses, The value 0 if no addresses are included, the value 1 for
+IPv4, and the value 2 for IPv6.</t>
+</dd>
+<dt>Addr Length</dt>
+<dd><t>length of the addresses in octets. Must be a multiple of 4 for IPv4 and
+a multiple of 16 for IPv6. This field can be zero if no addresses are
+specified.</t>
+</dd>
+<dt>IPv4 or IPv6-address(es)</dt>
+<dd><t>list of IPv4 or IPv6 addresses</t>
+</dd>
+<dt>Domain Name Length</dt>
+<dd><t>length of Domain Name. Zero if there is no Domain Name</t>
+</dd>
+<dt>Domain Name</dt>
+<dd><t>domain name for authentication or resolving IP addresses. The domain name
+is encoded in uncompressed DNS wire format.</t>
+</dd>
+<dt>SvcParams Length</dt>
+<dd><t>length of SvcParams. Zero if there are no service parameters specified.</t>
+</dd>
+<dt>SvcParams</dt>
+<dd><t>Service parameters</t>
+</dd>
+<dt>Interface Name Length</dt>
+<dd><t>length of Interface Name. Zero if no interface is specified.</t>
+</dd>
+<dt>Interface Name</dt>
+<dd><t>name of outgoing interface for transport connections</t>
+</dd>
+</dl>
+<t>This option is designed to give control over what level of detail it
+wants to specify. The first 5 flags (U, UA, A, P, and D) give general
+requirements for properties of DNS transports that are used by the
+client proxy.
+The U, UA, and A flags are mutually exclusive. If more than one
+flag is set, the proxy SHOULD return a BADPROXYPOLICY error.
+There are four possibilities:</t>
+
+<dl>
+<dt>U = 0, UA = 0, A = 0</dt>
+<dd><t>An effort is made to reach authenticated encryption, if that fails,
+unauthenticated encryption is tried. If that also fails, the proxy
+resorts to an unencrypted transport.
+It is an error
+if either or both of the P or D flags is set and the proxy SHOULD
+return a BADPROXYPOLICY error.</t>
+</dd>
+<dt>U = 1, UA = 0, A = 0</dt>
+<dd><t>The proxy only tries only unencrypted transports.
+It is an error
+if either or both of the P or D flags is set and the proxy SHOULD return a
+BADPROXYPOLICY error.</t>
+</dd>
+<dt>U = 0, UA = 1, A = 0</dt>
+<dd><t>An effort is made to reach authenticated encryption, if that fails,
+unauthenticated encryption is tried.
+It is an error
+if either or both of the P or D flags is set and the proxy SHOULD return a
+BADPROXYPOLICY error.</t>
+</dd>
+<dt>U = 0, UA = 0, A = 1</dt>
+<dd><t>The proxy only tries authenticated encryption. The P and D flags can be
+set to control which authentication mechanism has to be used.</t>
+</dd>
+</dl>
+<t>The P and D flags allow the application to require
+a specific authentication mechanism (PKIX or DANE). The meaning of the
+flags is the following:</t>
+
+<dl>
+<dt>P = 0, D = 0</dt>
+<dd><t>At least one of the two mechanisms has to validate for authenticated
+encryption to succeed.</t>
+</dd>
+<dt>P = 1, D = 0</dt>
+<dd><t>PKIX validation has to succeed, the status of DANE validation is ignored.</t>
+</dd>
+<dt>P = 0, D = 1</dt>
+<dd><t>A DANE record has to be present and be DNSSEC valid.
+A DANE record has
+a Certificate Usage Field. For some values of this field (the values zero
+and one), DANE requires PKIX validation.
+In those cases, PKIX validation is also required according to the DANE
+specifications. For the values two and three, DANE does not require
+PKIX and because the P flag is zero, the result of PKIX validation has to
+be ignored.</t>
+</dd>
+<dt>P = 1, D = 1</dt>
+<dd><t>Both PKIX and DANE are required together. For PKIX, this means that
+PKIX validation has to succeed. For DANE it means that a DANE record
+has to be present and be DNSSEC valid. Validation using the DANE record
+has to succeed.</t>
+</dd>
+</dl>
+<t>Note that these two flags can only be used in combination with the A
+flag. The proxy SHOULD return a BADPROXYPOLICY error if either or both of the
+P or D flags is set and the A flag is clear.</t>
+<t>The next flags provide more detailed control over which transports
+should be used or not. For each of 5 different transports
+(Do53, DoT, DoH with ALPN h2, DoH with ALPN h3, DoQ) there is a flag
+to allow (A53,AT,AH2,AH3,AQ) or disallow (D53,DT,DH2,DH3,DQ) the use of the
+transport. There is space to add more transports later. Note that setting
+the A flag and the D flag for a protocol (for example, setting both the
+A53 and the D53 flags) is not allowed and a proxy SHOULD reject such a request.</t>
+<t>To future proof applications, there is a single flag DD, that by default
+disallows transports that are not explicitly listed. With this flag clear,
+the application allows all transports that are not explicitly disallowed
+(including future transports). With the flag set, the
+application has to explicitly list which transports can be used.
+For example, by setting only DD and AT, the application forces the
+use of DoT.</t>
+<t>When DD = 0:</t>
+
+<ul spacing="compact">
+<li>all transports are in the pool of potentially usable transports</li>
+<li>D53, DT, DH2, DH3 and DQ remove those transports from the pool.</li>
+<li>The values of A53, AT, AH2, AH3 and AQ are irrelevant</li>
+</ul>
+<t>When DD = 1:</t>
+
+<ul spacing="compact">
+<li>no transports are in the pool of potentially usable transports</li>
+<li>A53, AT, AH2, AH3 and AQ add those transports to the pool</li>
+<li>The values of D53, DT, DH2, DH3 and DQ are irrelevant</li>
+</ul>
+<t>Finally, an application can specify its own resolvers or rely on the
+resolvers that are known to the proxy. If ADN Length and Addr Length
+are both zero, then the application requests the resolvers known to
+the proxy. [Note: it is unclear at the moment what to do with any
+Service Parameters]</t>
+<t>If the application specifies only an authentication-domain-name then the
+proxy is expected to resolve the name to addresses. If only addresses
+are specified then the proxy assumes that no name is known (though
+a PKIX certificate may include an address literal in the subjectAltName).
+If both a name and address are specified then the proxy will use the
+specified address and use the name for authentication.</t>
+<t>To simplify the encoding of the option, an option with addresses will
+have either IPv4 or IPv6 addresses. If the application wants to specify
+both IPv4 and IPv6 addresses for a certain authentication-domain-name
+then it has to include two options.</t>
+<t>An application may want to specify a DNS resolver that is reachable
+through an IPv6 link-local address.
+IPv6 link-local addresses are special in that they require a zone to be
+specified, either explicitly or implicitly. Typically for a link-local
+address that appears as a source or destination address,
+the zone is implicitly the zone of the link the packet travels on.
+For packets that travel between hosts, there is no goed way to explictly
+specify the zone of a link-local address because two different hosts
+do not agree on zone names. However, if the proxy is on the same host
+as the application, then the zone identifier for the link-local address
+can be specified in the Interface field. For this purpose an interface
+name can also be an interface index expressed as a decimal string.</t>
+<t>When present, Service Parameters specify how to connect. Otherwise it is
+up to the proxy to try various possibilities. For Service Parameters,
+the values of the ipv4hint and ipv6hint fields are ignored. Addresses
+can only be specified using the addresses field in the PROXY CONTROL Option.</t>
+<t>Associated with this option is a new error, BADPROXYPOLICY. When
+a proxy cannot meet the requirements in a PROXY CONTROL Option or the
+option is malformed, it returns this error.</t>
+<t>If the proxy returns a BADPROXYPOLICY error, the proxy MAY include
+a PROXY CONTROL Option that lists what the proxy can do. For example,
+if authenticated encryption is not possible, but unauthenticated is,
+then the proxy may include an option that has the UA bit set.</t>
+</section>
+
+<section anchor="proxy-scope-option"><name>PROXY SCOPE OPTION</name>
+
+<artwork>      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                          OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                         OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: |                          Scope                                |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+</artwork>
+
+<dl newline="true">
+<dt>OPTION-CODE</dt>
+<dd><t>To be decided</t>
+</dd>
+<dt>OPTION-LENGTH</dt>
+<dd><t>Length of this option excluding the OPTION-CODE and OPTION-LENGTH fields</t>
+</dd>
+<dt>Scope</dt>
+<dd><t>Scope of the source address of a request. Scope can have the following
+values:</t>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Scope</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>0</td>
+<td>Undefined</td>
+</tr>
+
+<tr>
+<td>1</td>
+<td>Host local</td>
+</tr>
+
+<tr>
+<td>2</td>
+<td>Link local</td>
+</tr>
+
+<tr>
+<td>3</td>
+<td>Site local</td>
+</tr>
+
+<tr>
+<td>4</td>
+<td>Global</td>
+</tr>
+</tbody>
+</table></dd>
+</dl>
+<t>The purpose of this option is to deal with proxies that forward
+DNS traffic without first removing any EDNS(0) options. The option requests
+the DNS proxy that processes the option to report the scope of the source
+address.</t>
+</section>
+
+<section anchor="trust-anchor-option"><name>TRUST ANCHOR OPTION</name>
+
+<artwork>      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                          OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                         OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: |             ANCHORS-XML-LENGTH                                |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   6: ~             ANCHORS-XML                                       ~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: |             ANCHORS-P7S-LENGTH                                |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   6: ~             ANCHORS-P7S                                       ~
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</artwork>
+<t>where</t>
+
+<dl newline="true">
+<dt>OPTION-CODE</dt>
+<dd><t>To be decided</t>
+</dd>
+<dt>OPTION-LENGTH</dt>
+<dd><t>Length of this option excluding the OPTION-CODE and OPTION-LENGTH fields</t>
+</dd>
+<dt>ANCHORS-XML-LENGTH</dt>
+<dd><t>Length of ANCHORS-XML in network byte order</t>
+</dd>
+<dt>ANCHORS-XML</dt>
+<dd><t>Trust anchors in XML format</t>
+</dd>
+<dt>ANCHORS-P7S-LENGTH</dt>
+<dd><t>Length of ANCHORS-P7S in network byte order</t>
+</dd>
+<dt>ANCHORS-P7S</dt>
+<dd><t>Signature in p7s format</t>
+</dd>
+</dl>
+<t>This option provides DNSSEC trust anchors as described in <xref target="RFC7958"></xref>.</t>
+</section>
+
+<section anchor="protocol-specification"><name>Protocol Specification</name>
+
+<section anchor="client-processing"><name>Client Processing</name>
+<t>A stub resolver that wishes to use the PROXY CONTROL Option includes the
+option in all outgoing DNS requests that require privacy. The option
+should be initialized according to the needs of the application.
+In addition the PROXY SCOPE Option can be added. In requests, the Scope
+field is set to undefined.</t>
+<t>If the stub resolver receives a reply without a PROXY CONTROL Option
+included in the reply, then stub resolver has to assume that traffic will
+have Do53 levels of privacy.  Similarly, a lack of a PROXY SCOPE Option
+implies a global scope.</t>
+<t>If the stub resolver receives a BADPROXYPOLICY error then the proxy was
+unable to meet the requirements of the PROXY CONTROL Option.</t>
+
+<section anchor="probing"><name>Probing</name>
+<t>In cases where the stub resolver expects a local DNS proxy, or where the
+stub resolver has (a limited) fall back to more private transports, or
+when the security policy of the application is such that is better to fail
+than send queries over Do53, the stub resolver first sends a probing
+query to verify that the proxy supports the PROXY CONTROL and
+PROXY SCOPE Options.</t>
+<t>This request queries &quot;resolver.arpa&quot; for SOA records.
+The proxy MUST implement this as a
+Special Use Domain Name. The actual response is not important. The
+important part is that the proxy returns PROXY CONTROL and PROXY SCOPE
+Options as described in this document or sets
+the response code to BADPROXYPOLICY if it cannot meet specified policy.</t>
+</section>
+
+<section anchor="trust-anchor"><name>Trust Anchor</name>
+<t>In the ideal case, the host operating system provides applications with a
+secure way to access a DNSSEC trust anchor that is maintained according to
+<xref target="RFC5011"></xref>. However in situations where this is not the case, an application
+can fall back to <xref target="RFC7958"></xref>. However, for short lived processes, there is
+considerable overhead in issuing two HTTP(S) requests to data.iana.org to
+obtain the trust anchor XML file and the signature over the trust anchor.
+For this reason, it makes sense to let the proxy cache this information.</t>
+<t>If the local operating system does not provide a DNSSEC trust anchor, then
+the application can ask the proxy. The stub resolver adds the TRUST ANCHOR
+Option with ANCHORS-XML-LENGTH and ANCHORS-P7S-LENGTH set to zero. If the
+proxy returns both an ANCHORS-XML and an ANCHORS-P7S, then the application
+verifies the trust anchor using the trust anchor certificate (which needs
+to come with the application).</t>
+</section>
+</section>
+
+<section anchor="server-processing"><name>Server Processing</name>
+<t>Proxies are encouraged to cache options that appear in requests under the
+assumption that a stub resolver will send multiple requests. If a proxy
+caches DNS responses then the proxy MUST tag cached responses with the
+properties of the DNS transport. When responding to later requests,
+the proxy returns a cached entry only if the parameters of the DNS transport
+match what is specified in the request.</t>
+<t>When a proxy receives a new set of requirements, the proxy compiles a list of
+addresses to connect to and a list of transports to try per address.
+The proxy SHOULD prefer more private transports over less private ones.</t>
+<t>If the proxy cannot obtain a connection to a recursive resolver in a way that
+matches the provided policy, then the proxy sets the BADPROXYPOLICY
+response code in the reply.</t>
+<t>The proxy MUST implement &quot;resolver.arpa&quot; as a locally served zone.
+Proxies SHOULD respond to all queries with NODATA unless other behavior
+is specified in a different document.</t>
+<t>If the proxy successfully connects to a recursive resolver and receives a
+reply, or the query is for a special use domain name that is handled internally
+in the proxy, then the proxy add a PROXY CONTROL Options dat details the
+connection to the recursive resolver (i.e., the U, UA, or A flag depending
+on encryption and authentication, P and or D for authenticated connections,
+A53, AT, AH2, AH3, or AQ depending on the transport (or none of those for a
+future transport). Furthermore the proxy includes the address it
+connected to, the Domain Name if known, any Service Parameters and
+the outgoing interface name if known.</t>
+<t>If the proxy finds a PROXY SCOPE Option, then it calculates the scope from
+the source address. The proxy adds a PROXY SCOPE Option to a reply and
+sets the value of Scope to the actual scope of the source address of the
+request.</t>
+<t>If the request contains a TRUST ANCHOR Option, then the proxy tries to
+fetch the trust anchor XML and p7s files if it does not have them already.
+If fetching one or both fails then the proxy sets the corresponding
+length to zero. It is not clear how long the proxy can cache this information.
+<xref target="RFC7958"></xref> Does not describe how long these documents can be cache.
+A simple solution is to take the Expires header in the HTTP reply.
+The proxy adds a TRUST ANCHOR Option to the reply.</t>
+</section>
+</section>
+
+<section anchor="connection-between-stub-resolver-and-proxy"><name>Connection Between Stub Resolver And Proxy</name>
+<t>Absent other configuration, a stub resolver that implements this standard
+SHOULD connect to the proxy using Do53 and as remote address either ::1 or
+127.0.0.1. In particular, the stub resolver SHOULD avoid using name
+servers listed in files such as /etc/resolv.conf.</t>
+<t>The reason for this is to simplify the integration of local DNS proxies
+in existing environments. If the stub resolver ignores /etc/resolv.conf
+then the proxy can use that information to connect to recursive resolvers.</t>
+<t>If no DNS server is responding to queries sent using Do53 to ::1 and 127.0.0.1,
+or if the response indicates that this standard is not supported, then
+the stub resolver MAY fall back to traditional configuration methods, such
+as /etc/resolv.conf. However, in that case the stub resolver MUST make
+sure that doing so does not violate the policy set by the application.</t>
+</section>
+
+<section anchor="security-considerations"><name>Security Considerations</name>
+<t>A privacy sensitive application SHOULD first issue a SOA query for
+resolver.arpa to verify that the local proxy supports the options documented
+in the document. If the proxy does not support this document then the
+application can refrain from sending queries that reveal privacy sensitive
+names.</t>
+<t>By setting the interface name, an application can select an outging interface
+on the proxy. Proxies should make sure that a query receives from a
+process that is authorized to do so. By default, a proxy SHOULD allow only
+process on the same host to use this feature. If an unauthorized process
+includes an option with the interface name set, then the proxy SHOULD
+return the BADPROXYPOLICY error.</t>
+</section>
+
+<section anchor="iana-considerations"><name>IANA Considerations</name>
+<t>IANA has assigned the following DNS EDNS0 option codes:</t>
+
+<artwork> Value   Name           Status     Reference
+------- -------------- ---------- -----------
+ TBD     PROXY CONTROL  Standard   RFC xxxx
+ TBD     PROXY SCOPE    Standard   RFC xxxx
+ TBD     TRUST ANCHOR   Standard   RFC xxxx
+</artwork>
+<t>IANA has assigned the following DNS response code as an early allocation
+  per <xref target="RFC7120"></xref>:</t>
+
+<artwork> RCODE    Name             Description                   Reference
+-------- ---------------- ----------------------------- -----------
+ TBD      BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
+</artwork>
+</section>
+
+<section anchor="acknowledgements"><name>Acknowledgements</name>
+<t>Many thanks to Yorgos Thessalonikefs and Willem Toorop for their feedback.</t>
+</section>
+
+</middle>
+
+<back>
+<references><name>Normative References</name>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.8174.xml"/>
+</references>
+<references><name>Informative References</name>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.1034.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.1035.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.3493.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.5011.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.5280.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.5625.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.6891.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.7120.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.7540.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.7858.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.7958.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.8484.xml"/>
+<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.9000.xml"/>
+</references>
+
+</back>
+
+</rfc>
