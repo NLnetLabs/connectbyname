@@ -3,9 +3,9 @@
 
 
 ADD                                                         P.C. Homburg
-Internet-Draft                                               7 July 2022
+Internet-Draft                                              11 July 2022
 Intended status: Standards Track                                        
-Expires: 8 January 2023
+Expires: 12 January 2023
 
 
                  Control Options For DNS Client Proxies
@@ -40,7 +40,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 8 January 2023.
+   This Internet-Draft will expire on 12 January 2023.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Homburg                  Expires 8 January 2023                 [Page 1]
+Homburg                  Expires 12 January 2023                [Page 1]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Homburg                  Expires 8 January 2023                 [Page 2]
+Homburg                  Expires 12 January 2023                [Page 2]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -165,7 +165,7 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 8 January 2023                 [Page 3]
+Homburg                  Expires 12 January 2023                [Page 3]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -221,7 +221,7 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 8 January 2023                 [Page 4]
+Homburg                  Expires 12 January 2023                [Page 4]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -277,7 +277,7 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 8 January 2023                 [Page 5]
+Homburg                  Expires 12 January 2023                [Page 5]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -333,7 +333,7 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 8 January 2023                 [Page 6]
+Homburg                  Expires 12 January 2023                [Page 6]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -389,7 +389,7 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 8 January 2023                 [Page 7]
+Homburg                  Expires 12 January 2023                [Page 7]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -445,7 +445,7 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 8 January 2023                 [Page 8]
+Homburg                  Expires 12 January 2023                [Page 8]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -501,7 +501,7 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 8 January 2023                 [Page 9]
+Homburg                  Expires 12 January 2023                [Page 9]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -557,7 +557,7 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 8 January 2023                [Page 10]
+Homburg                  Expires 12 January 2023               [Page 10]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -613,7 +613,7 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 8 January 2023                [Page 11]
+Homburg                  Expires 12 January 2023               [Page 11]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -669,7 +669,7 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 8 January 2023                [Page 12]
+Homburg                  Expires 12 January 2023               [Page 12]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -725,7 +725,7 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 8 January 2023                [Page 13]
+Homburg                  Expires 12 January 2023               [Page 13]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -781,7 +781,7 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 8 January 2023                [Page 14]
+Homburg                  Expires 12 January 2023               [Page 14]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -837,7 +837,7 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 8 January 2023                [Page 15]
+Homburg                  Expires 12 January 2023               [Page 15]
 
 Internet-Draft                    codcp                        July 2022
 
@@ -893,4 +893,4 @@ Author's Address
 
 
 
-Homburg                  Expires 8 January 2023                [Page 16]
+Homburg                  Expires 12 January 2023               [Page 16]
