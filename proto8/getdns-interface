@@ -1,0 +1,18 @@
+{
+	resolvers
+	[
+		{
+			flags: true or false
+			
+			addrs
+			[
+				{
+					address-type "IPv4" or "IPv6"
+					address-data
+			]
+			domain-name
+			svcparams
+			interface
+		}
+	]
+}
