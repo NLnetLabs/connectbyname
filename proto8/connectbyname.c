@@ -359,6 +359,7 @@ static void policy2getdns(struct cbn_context *cbn_ctx)
 	int r;
 	getdns_dict *top_dict, *dict, *addr_dict, *svc_dict;
 	getdns_list *top_list, *list;
+	struct sockaddr_in *sin4;
 	struct sockaddr_in6 *sin6;
 	getdns_bindata bindata;
 
@@ -446,6 +447,20 @@ static void policy2getdns(struct cbn_context *cbn_ctx)
 			addr_dict= getdns_dict_create();
 			switch(cbn_ctx->policy.resolver.addrs[i].ss_family)
 			{
+			case AF_INET:
+				bindata.data= "IPv4";
+				bindata.size= strlen(bindata.data);
+				getdns_dict_set_bindata(addr_dict,
+					"address-type", &bindata);
+				sin4= (struct sockaddr_in *)
+					&cbn_ctx->policy.resolver.addrs[i];
+				bindata.data= (uint8_t *)&sin4->sin_addr;
+				bindata.size= sizeof(sin4->sin_addr);
+				getdns_dict_set_bindata(addr_dict,
+					"address-data", &bindata);
+
+				break;
+
 			case AF_INET6:
 				bindata.data= "IPv6";
 				bindata.size= strlen(bindata.data);
