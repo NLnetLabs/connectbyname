@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 	struct addrinfo hints;
 	char buf[1024];
 	struct state state;
-	struct cbnp_resolver resolver;
+	struct cbnp_resolver resolver1, resolver2;
 	struct cbn_policy policy;
 
 	if (argc != 2)
@@ -63,11 +63,11 @@ int main(int argc, char *argv[])
 					 */
 	addr_str = "2001:4860:4860::8888";
 	// addr_str = "2a10:3781:2413:1:2a0:c9ff:fe9f:16bd";
+	addr_str = "2606:4700::6812:152c";
 	getaddrinfo(addr_str, "domain", &hints, &ai);
 	// getaddrinfo("8.8.8.8", "domain", &hints, &ai);
 
-	/* Xmas tree packet */
-	resolver.settings= 
+	resolver1.settings= 
 		// CBN_UNENCRYPTED |
 		// CBN_UNAUTHENTICATED_ENCRYPTION |
 		CBN_AUTHENTICATED_ENCRYPTION |
@@ -84,22 +84,61 @@ int main(int argc, char *argv[])
 		// CBN_DISALLOW_DOH3 |
 		CBN_ALLOW_DOQ; // |
 		// CBN_DISALLOW_DOQ;
-	resolver.domain_name= "dns.google";
-	// resolver.domain_name= NULL;
-	for (resolver.naddrs= 0, tmp_ai= ai;
-		resolver.naddrs < CBNPR_MAX_ADDRS && tmp_ai != NULL;
-		resolver.naddrs++, tmp_ai= tmp_ai->ai_next)
+	resolver1.domain_name= "dns.google";
+	// resolver1.domain_name= NULL;
+	for (resolver1.naddrs= 0, tmp_ai= ai;
+		resolver1.naddrs < CBNPR_MAX_ADDRS && tmp_ai != NULL;
+		resolver1.naddrs++, tmp_ai= tmp_ai->ai_next)
 	{
-		assert(tmp_ai->ai_addrlen <= sizeof(resolver.addrs[0]));
-		memcpy(&resolver.addrs[resolver.naddrs],
+		assert(tmp_ai->ai_addrlen <= sizeof(resolver1.addrs[0]));
+		memcpy(&resolver1.addrs[resolver1.naddrs],
 			tmp_ai->ai_addr, tmp_ai->ai_addrlen);
 	}
-	resolver.svcparams= "port=4242 no-default-alpn alpn=h2 mandatory=no-default-alpn,alpn";
-	resolver.interface= "foo";
-	resolver.interface= NULL;
+	resolver1.svcparams= "port=4242 no-default-alpn alpn=h2 mandatory=no-default-alpn,alpn";
+	resolver1.svcparams= "no-default-alpn alpn=h2 mandatory=no-default-alpn,alpn";
+	resolver1.interface= "foo";
+	resolver1.interface= NULL;
+
+	addr_str = "2001:4860:4860::8888";
+	// addr_str = "2a10:3781:2413:1:2a0:c9ff:fe9f:16bd";
+	getaddrinfo(addr_str, "domain", &hints, &ai);
+	// getaddrinfo("8.8.8.8", "domain", &hints, &ai);
+
+	resolver2.settings= 
+		// CBN_UNENCRYPTED |
+		// CBN_UNAUTHENTICATED_ENCRYPTION |
+		// CBN_AUTHENTICATED_ENCRYPTION |
+		// CBN_PKIX_AUTH_REQUIRED |
+		// CBN_DANE_AUTH_REQUIRED |
+		CBN_DEFAULT_DISALLOW_OTHER_TRANSPORTS |
+		CBN_ALLOW_DO53 |
+		// CBN_DISALLOW_DO53 |
+		CBN_ALLOW_DOT |
+		// CBN_DISALLOW_DOT |
+		CBN_ALLOW_DOH2 |
+		// CBN_DISALLOW_DOH2 |
+		CBN_ALLOW_DOH3 |
+		// CBN_DISALLOW_DOH3 |
+		CBN_ALLOW_DOQ; // |
+		// CBN_DISALLOW_DOQ;
+	resolver2.domain_name= "dns.google";
+	// resolver2.domain_name= NULL;
+	for (resolver2.naddrs= 0, tmp_ai= ai;
+		resolver2.naddrs < CBNPR_MAX_ADDRS && tmp_ai != NULL;
+		resolver2.naddrs++, tmp_ai= tmp_ai->ai_next)
+	{
+		assert(tmp_ai->ai_addrlen <= sizeof(resolver2.addrs[0]));
+		memcpy(&resolver2.addrs[resolver2.naddrs],
+			tmp_ai->ai_addr, tmp_ai->ai_addrlen);
+	}
+	resolver2.svcparams= "port=4242 no-default-alpn alpn=h2 mandatory=no-default-alpn,alpn";
+	resolver2.svcparams= "no-default-alpn alpn=h2 mandatory=no-default-alpn,alpn";
+	resolver2.interface= "foo";
+	resolver2.interface= NULL;
 
 	cbn_policy_init2(&policy, "name", 0);
-	cbn_policy_add_resolver(&policy, &resolver);
+	cbn_policy_add_resolver(&policy, &resolver1);
+	cbn_policy_add_resolver(&policy, &resolver2);
 
 	freeaddrinfo(ai);
 
