@@ -149,22 +149,27 @@ int cbn_init(struct cbn_context *cbn_ctx, struct event_base *event_base)
 int cbn_init2(struct cbn_context *cbn_ctx, struct cbn_policy *policy,
 	char *name, int flags, struct event_base *event_base)
 {
+	int i;
+
 	cbn_init(cbn_ctx, event_base);
 	cbn_ctx->policy= *policy;
-	if (cbn_ctx->policy.resolver.domain_name)
+	for (i = 0; i<policy->resolver_count; i++)
 	{
-		cbn_ctx->policy.resolver.domain_name=
-			strdup(cbn_ctx->policy.resolver.domain_name);
-	}
-	if (cbn_ctx->policy.resolver.svcparams)
-	{
-		cbn_ctx->policy.resolver.svcparams=
-			strdup(cbn_ctx->policy.resolver.svcparams);
-	}
-	if (cbn_ctx->policy.resolver.interface)
-	{
-		cbn_ctx->policy.resolver.interface=
-			strdup(cbn_ctx->policy.resolver.interface);
+		if (policy->resolver[i].domain_name)
+		{
+			cbn_ctx->policy.resolver[i].domain_name=
+				strdup(policy->resolver[i].domain_name);
+		}
+		if (policy->resolver[i].svcparams)
+		{
+			cbn_ctx->policy.resolver[i].svcparams=
+				strdup(policy->resolver[i].svcparams);
+		}
+		if (policy->resolver[i].interface)
+		{
+			cbn_ctx->policy.resolver[i].interface=
+				strdup(policy->resolver[i].interface);
+		}
 	}
 }
 
@@ -184,21 +189,27 @@ struct cbn_policy *cbn_policy_init2(
 int cbn_policy_add_resolver(struct cbn_policy *policy,
 	struct cbnp_resolver *resolver)
 {
-	policy->resolver= *resolver;
-	if (policy->resolver.domain_name)
+	int i;
+
+	if (policy->resolver_count >= MAX_RESOLVERS)
+		return -1;
+
+	i= policy->resolver_count++;
+	policy->resolver[i]= *resolver;
+	if (resolver->domain_name)
 	{
-		policy->resolver.domain_name=
-			strdup(policy->resolver.domain_name);
+		policy->resolver[i].domain_name=
+			strdup(resolver->domain_name);
 	}
-	if (policy->resolver.svcparams)
+	if (resolver->svcparams)
 	{
-		policy->resolver.svcparams=
-			strdup(policy->resolver.svcparams);
+		policy->resolver[i].svcparams=
+			strdup(resolver->svcparams);
 	}
-	if (policy->resolver.interface)
+	if (resolver->interface)
 	{
-		policy->resolver.interface=
-			strdup(policy->resolver.interface);
+		policy->resolver[i].interface=
+			strdup(resolver->interface);
 	}
 }
 
@@ -353,10 +364,35 @@ void connectbyname_free(void *ref)
 	ctxp= NULL;
 }
 
+static struct
+{
+	unsigned flag;
+	char *getdns_flag;
+} flags2getdns[] =
+{
+	{ CBN_UNENCRYPTED,			"unencrypted" },
+	{ CBN_UNAUTHENTICATED_ENCRYPTION,	"unauthenticated-encryption" },
+	{ CBN_AUTHENTICATED_ENCRYPTION,		"authenticated-encryption" },
+	{ CBN_PKIX_AUTH_REQUIRED,		"pkix-auth-required" },
+	{ CBN_DANE_AUTH_REQUIRED,		"dane-auth-required" },
+	{ CBN_DEFAULT_DISALLOW_OTHER_TRANSPORTS,
+					"default-disallow-other-transports" },
+	{ CBN_ALLOW_DO53,			"allow-do53" },
+	{ CBN_DISALLOW_DO53,			"disallow-do53" },
+	{ CBN_ALLOW_DOT,			"allow-dot" },
+	{ CBN_DISALLOW_DOT,			"disallow-dot" },
+	{ CBN_ALLOW_DOH2,			"allow-doh2" },
+	{ CBN_DISALLOW_DOH2,			"disallow-doh2" },
+	{ CBN_ALLOW_DOH3,			"allow-doh3" },
+	{ CBN_DISALLOW_DOH3,			"disallow-doh3" },
+	{ CBN_ALLOW_DOQ,			"allow-doq" },
+	{ CBN_DISALLOW_DOQ,			"disallow-doq" },
+	{ 0,					NULL }
+};
+
 static void policy2getdns(struct cbn_context *cbn_ctx)
 {
-	int i;
-	int r;
+	int i, j, r;
 	getdns_dict *top_dict, *dict, *addr_dict, *svc_dict;
 	getdns_list *top_list, *list;
 	struct sockaddr_in *sin4;
@@ -365,141 +401,99 @@ static void policy2getdns(struct cbn_context *cbn_ctx)
 
 	top_dict= getdns_dict_create();
 	top_list= getdns_list_create();
-	dict= getdns_dict_create();
 
-	if (cbn_ctx->policy.resolver.settings & CBN_UNENCRYPTED)
+	fprintf(stderr, "policy2getdns: resolver_count = %d\n",
+		cbn_ctx->policy.resolver_count);
+
+	for (i = 0; i<cbn_ctx->policy.resolver_count; i++)
 	{
-		getdns_dict_set_int(dict, "unencrypted", 1);
-	}
-	if (cbn_ctx->policy.resolver.settings & CBN_UNAUTHENTICATED_ENCRYPTION)
-	{
-		getdns_dict_set_int(dict, "unauthenticated-encryption", 1);
-	}
-	if (cbn_ctx->policy.resolver.settings & CBN_AUTHENTICATED_ENCRYPTION)
-	{
-		getdns_dict_set_int(dict, "authenticated-encryption", 1);
-	}
-	if (cbn_ctx->policy.resolver.settings & CBN_PKIX_AUTH_REQUIRED)
-	{
-		getdns_dict_set_int(dict, "pkix-auth-required", 1);
-	}
-	if (cbn_ctx->policy.resolver.settings & CBN_DANE_AUTH_REQUIRED)
-	{
-		getdns_dict_set_int(dict, "dane-auth-required", 1);
-	}
-	if (cbn_ctx->policy.resolver.settings &
-		CBN_DEFAULT_DISALLOW_OTHER_TRANSPORTS)
-	{
-		getdns_dict_set_int(dict, "default-disallow-other-transports",
-			1);
-	}
-	if (cbn_ctx->policy.resolver.settings & CBN_ALLOW_DO53)
-	{
-		getdns_dict_set_int(dict, "allow-do53", 1);
-	}
-	if (cbn_ctx->policy.resolver.settings & CBN_DISALLOW_DO53)
-	{
-		getdns_dict_set_int(dict, "disallow-do53", 1);
-	}
-	if (cbn_ctx->policy.resolver.settings & CBN_ALLOW_DOT)
-	{
-		getdns_dict_set_int(dict, "allow-dot", 1);
-	}
-	if (cbn_ctx->policy.resolver.settings & CBN_DISALLOW_DOT)
-	{
-		getdns_dict_set_int(dict, "disallow-dot", 1);
-	}
-	if (cbn_ctx->policy.resolver.settings & CBN_ALLOW_DOH2)
-	{
-		getdns_dict_set_int(dict, "allow-doh2", 1);
-	}
-	if (cbn_ctx->policy.resolver.settings & CBN_DISALLOW_DOH2)
-	{
-		getdns_dict_set_int(dict, "disallow-doh2", 1);
-	}
-	if (cbn_ctx->policy.resolver.settings & CBN_ALLOW_DOH3)
-	{
-		getdns_dict_set_int(dict, "allow-doh3", 1);
-	}
-	if (cbn_ctx->policy.resolver.settings & CBN_DISALLOW_DOH3)
-	{
-		getdns_dict_set_int(dict, "disallow-doh3", 1);
-	}
-	if (cbn_ctx->policy.resolver.settings & CBN_ALLOW_DOQ)
-	{
-		getdns_dict_set_int(dict, "allow-doq", 1);
-	}
-	if (cbn_ctx->policy.resolver.settings & CBN_DISALLOW_DOQ)
-	{
-		getdns_dict_set_int(dict, "disallow-doq", 1);
-	}
-	if (cbn_ctx->policy.resolver.domain_name)
-	{
-		bindata.size= strlen(cbn_ctx->policy.resolver.domain_name);
-		bindata.data= cbn_ctx->policy.resolver.domain_name;
-		getdns_dict_set_bindata(dict, "domain-name", &bindata);
-	}
-	if (cbn_ctx->policy.resolver.naddrs)
-	{
-		list= getdns_list_create();
-		for (i= 0; i<cbn_ctx->policy.resolver.naddrs; i++)
+		dict= getdns_dict_create();
+		
+		for (j = 0; flags2getdns[j].getdns_flag != NULL; j++)
 		{
-			addr_dict= getdns_dict_create();
-			switch(cbn_ctx->policy.resolver.addrs[i].ss_family)
+			if (cbn_ctx->policy.resolver[i].settings &
+				flags2getdns[j].flag)
 			{
-			case AF_INET:
-				bindata.data= "IPv4";
-				bindata.size= strlen(bindata.data);
-				getdns_dict_set_bindata(addr_dict,
-					"address-type", &bindata);
-				sin4= (struct sockaddr_in *)
-					&cbn_ctx->policy.resolver.addrs[i];
-				bindata.data= (uint8_t *)&sin4->sin_addr;
-				bindata.size= sizeof(sin4->sin_addr);
-				getdns_dict_set_bindata(addr_dict,
-					"address-data", &bindata);
-
-				break;
-
-			case AF_INET6:
-				bindata.data= "IPv6";
-				bindata.size= strlen(bindata.data);
-				getdns_dict_set_bindata(addr_dict,
-					"address-type", &bindata);
-				sin6= (struct sockaddr_in6 *)
-					&cbn_ctx->policy.resolver.addrs[i];
-				bindata.data= (uint8_t *)&sin6->sin6_addr;
-				bindata.size= sizeof(sin6->sin6_addr);
-				getdns_dict_set_bindata(addr_dict,
-					"address-data", &bindata);
-
-				break;
-
-			default:
-				fprintf(stderr,
-					"policy2getdns: unknown family %d\n",
-					cbn_ctx->policy.resolver.addrs[i].
-					ss_family);
-				abort();
+				getdns_dict_set_int(dict,
+					flags2getdns[j].getdns_flag, 1);
 			}
-			getdns_list_set_dict(list, i, addr_dict);
 		}
-		getdns_dict_set_list(dict, "addrs", list);
-	}
-	if (cbn_ctx->policy.resolver.svcparams)
-	{
-		svc_dict= svcparams2dict(cbn_ctx->policy.resolver.svcparams);
-		getdns_dict_set_dict(dict, "svcparams", svc_dict);
-		getdns_dict_destroy(svc_dict); svc_dict= NULL;
-	}
-	if (cbn_ctx->policy.resolver.interface)
-	{
-		bindata.size= strlen(cbn_ctx->policy.resolver.interface);
-		bindata.data= cbn_ctx->policy.resolver.interface;
-		getdns_dict_set_bindata(dict, "interface", &bindata);
-	}
+		if (cbn_ctx->policy.resolver[i].domain_name)
+		{
+			bindata.size=
+				strlen(cbn_ctx->policy.resolver[i].domain_name);
+			bindata.data= cbn_ctx->policy.resolver[i].domain_name;
+			getdns_dict_set_bindata(dict, "domain-name", &bindata);
+		}
+		if (cbn_ctx->policy.resolver[i].naddrs)
+		{
+			list= getdns_list_create();
+			for (j= 0; j<cbn_ctx->policy.resolver[j].naddrs; j++)
+			{
+				addr_dict= getdns_dict_create();
+				switch(cbn_ctx->policy.resolver[i].addrs[j].
+					ss_family)
+				{
+				case AF_INET:
+					bindata.data= "IPv4";
+					bindata.size= strlen(bindata.data);
+					getdns_dict_set_bindata(addr_dict,
+						"address-type", &bindata);
+					sin4= (struct sockaddr_in *)
+						&cbn_ctx->policy.resolver[i].
+						addrs[j];
+					bindata.data= (uint8_t *)&sin4->
+						sin_addr;
+					bindata.size= sizeof(sin4->sin_addr);
+					getdns_dict_set_bindata(addr_dict,
+						"address-data", &bindata);
 
-	getdns_list_set_dict(top_list, 0, dict);
+					break;
+
+				case AF_INET6:
+					bindata.data= "IPv6";
+					bindata.size= strlen(bindata.data);
+					getdns_dict_set_bindata(addr_dict,
+						"address-type", &bindata);
+					sin6= (struct sockaddr_in6 *)
+						&cbn_ctx->policy.resolver[i].
+						addrs[j];
+					bindata.data= (uint8_t *)&sin6->
+						sin6_addr;
+					bindata.size= sizeof(sin6->sin6_addr);
+					getdns_dict_set_bindata(addr_dict,
+						"address-data", &bindata);
+
+					break;
+
+				default:
+					fprintf(stderr,
+					"policy2getdns: unknown family %d\n",
+						cbn_ctx->policy.resolver[i].
+						addrs[j].ss_family);
+					abort();
+				}
+				getdns_list_set_dict(list, j, addr_dict);
+			}
+			getdns_dict_set_list(dict, "addrs", list);
+		}
+		if (cbn_ctx->policy.resolver[i].svcparams)
+		{
+			svc_dict= svcparams2dict(cbn_ctx->policy.resolver[i].
+				svcparams);
+			getdns_dict_set_dict(dict, "svcparams", svc_dict);
+			getdns_dict_destroy(svc_dict); svc_dict= NULL;
+		}
+		if (cbn_ctx->policy.resolver[i].interface)
+		{
+			bindata.size= strlen(cbn_ctx->policy.resolver[i].
+				interface);
+			bindata.data= cbn_ctx->policy.resolver[i].interface;
+			getdns_dict_set_bindata(dict, "interface", &bindata);
+		}
+
+		getdns_list_set_dict(top_list, i, dict);
+	}
 	getdns_dict_set_list(top_dict, "resolvers", top_list);
 
 	fprintf(stderr, "policy2getdns: top_dict %s\n", getdns_pretty_print_dict(top_dict));

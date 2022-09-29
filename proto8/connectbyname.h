@@ -110,9 +110,12 @@ struct cbnp_resolver
 #define CBN_ALLOW_DOQ			(1 << 16)
 #define CBN_DISALLOW_DOQ		(1 << 17)
 
+#define MAX_RESOLVERS	10
+
 struct cbn_policy
 {
-	struct cbnp_resolver resolver;
+	int resolver_count;
+	struct cbnp_resolver resolver[MAX_RESOLVERS];
 };
 
 struct cbn_context
