@@ -4,4 +4,11 @@ fail. Create an SSL bufferevent and wait for the buffer to become writable.
 Also, send a TLSA request and verify the server key if a DNSSEC secure reply
 arrives.
 
-This prototype focusses on configuration
+This prototype focusses on  using the proxy control option to communicate
+with stubby.
+
+This prototype needs the 'philip-proxy-config' branch of getdns including
+the referenced version of stubby.
+
+This prototype also needs stubby from that branch to be running on the
+same machine.

@@ -1,8 +1,15 @@
-LIBGETDNS=/home/philip/src/getdns/libgetdns.a /home/philip/src/getdns/libgetdns_ext_event.a -lunbound -lidn2
+# This code relies on experimental code that lives in the branch
+# 'philip-proxy-config' in the getdns repository.
+
+# Set the GETDNSSRC variable to the directory where getdns is checkout and
+# compiled
+GETDNSSRC=../../getdns
+
+LIBGETDNS=$(GETDNSSRC)/libgetdns.a $(GETDNSSRC)/libgetdns_ext_event.a -lunbound -lidn2
 LIBLDNS=-lldns
 LIBSSL=-lssl -lcrypto
 
-CFLAGS=-g -I/home/philip/src/getdns
+CFLAGS=-g -I$(GETDNSSRC)
 LDFLAGS=-g
 LIBS=-levent -levent_openssl $(LIBGETDNS) $(LIBLDNS) $(LIBSSL)
 
