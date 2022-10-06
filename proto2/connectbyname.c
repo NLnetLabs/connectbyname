@@ -68,6 +68,7 @@ int connectbyname(struct cbn_context *cbn_ctx,
 		reslist[naddrs]= tres;
 	}
 
+#if 0
 	printf("before sorting:\n");
 	for (i= 0; i<naddrs; i++)
 	{
@@ -75,6 +76,7 @@ int connectbyname(struct cbn_context *cbn_ctx,
 			addrstr, sizeof(addrstr), NULL, 0, NI_NUMERICHOST);
 		printf("%s\n", addrstr);
 	}
+#endif
 
 	/* Try to interleave IPv4 and IPv6 addresses */
 	prefer_ipv6= 1;
@@ -122,6 +124,7 @@ int connectbyname(struct cbn_context *cbn_ctx,
 		reslist[any]= NULL;
 	}
 
+#if 0
 	printf("after sorting:\n");
 	for (i= 0; i<naddrs; i++)
 	{
@@ -129,6 +132,7 @@ int connectbyname(struct cbn_context *cbn_ctx,
 			addrstr, sizeof(addrstr), NULL, 0, NI_NUMERICHOST);
 		printf("%s\n", addrstr);
 	}
+#endif
 
 	for(;;)
 	{
@@ -142,14 +146,12 @@ int connectbyname(struct cbn_context *cbn_ctx,
 		clock_gettime(CLOCK_MONOTONIC, &now);
 		for (i= 0, ap= alist; i<naddrs; i++, ap++)
 		{
-			fprintf(stderr, "%d: error %d\n", i, ap->error);
 			if (ap->error)
 			{
 				continue;	/* This address already
 						 * failed.
 						 */
 			}
-			fprintf(stderr, "%d: socket %d\n", i, ap->socket);
 
 			if (ap->socket == -1)
 			{
@@ -250,7 +252,6 @@ int connectbyname(struct cbn_context *cbn_ctx,
 
 		r= select(maxfd+1, NULL, &wrset, &errset,
 			do_timeout ? &timeout : NULL);
-		fprintf(stderr, "select returned %d\n", r);
 
 		if (r > 0)
 		{

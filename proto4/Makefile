@@ -1,10 +1,6 @@
-LIBEVENT=/home/philip/src/libevent-2.1.11-stable
-
-CFLAGS=-g -I$(LIBEVENT)/include
-LDFLAGS=-static -g -L$(LIBEVENT)/.libs
-LDFLAGS=-g -L$(LIBEVENT)/.libs
+CFLAGS=-g 
+LDFLAGS=
 LIBS=-levent -levent_openssl -lssl
-
 
 all:	get443_4
 

@@ -59,7 +59,6 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "connectbyname failed: %d\n", r);
 		exit(1);
 	}
-	fprintf(stderr, "main: &state: %p, ref %p\n", &state, ref);
 	state.cbn_ref= ref;
 
 	r= event_base_dispatch(event_base);
@@ -118,8 +117,6 @@ static void read_callback(struct bufferevent *bev, void *ref)
 {
 	int r;
 	char line[1024];
-
-	printf("\n\nin read_callback\n\n");
 
 	for (;;)
 	{

@@ -23,7 +23,7 @@ Implementation of connectbyname
 
 #define MAXADDRS	16
 #define TIMEOUT_NS	  25000000	/* 25 ms */
-#if 1
+#if 0
 #undef TIMEOUT_NS
 #define TIMEOUT_NS	5000000000	
 #endif
@@ -45,6 +45,7 @@ struct addrlist
 
 struct work_ctx
 {
+	char *hostname;
 	unsigned port;			/* Port number to connect to */
 	cbn_callback_T user_cb;
 	void *user_ref;
@@ -158,9 +159,9 @@ int connectbyname_asyn(struct cbn_context *cbn_ctx,
 	}
 	
 	work_ctx= malloc(sizeof(*work_ctx));
-	fprintf(stderr, "connectbyname_asyn: work_ctx = %p\n", work_ctx);
 	memset(work_ctx, '\0', sizeof(*work_ctx));
 	work_ctx->base= cbn_ctx;
+	work_ctx->hostname= strdup(hostname);
 	work_ctx->port= port_ul;
 	work_ctx->user_cb= user_cb;
 	work_ctx->user_ref= user_ref;
@@ -259,7 +260,6 @@ static void dns_callback(getdns_context *context,
 			gdns_r);
 		goto cleanup;
 	}
-	printf("len %d\n", len);
 	got_ipv4= 0;
 	got_ipv6= 0;
 	for (i= 0; i<len; i++)
@@ -275,8 +275,6 @@ static void dns_callback(getdns_context *context,
 			&addr_type);
 		if (gdns_r != GETDNS_RETURN_GOOD)
 		{
-			fprintf(stderr,
-			"dns_callback: address_type at %d: %d\n", i, gdns_r);
 			goto cleanup;
 		}
 		gdns_r= getdns_dict_get_bindata(addr_dict, "address_data",
@@ -287,8 +285,6 @@ static void dns_callback(getdns_context *context,
 			"dns_callback: address_data at %d: %d\n", i, gdns_r);
 			goto cleanup;
 		}
-		fprintf(stderr, "dns_callback: %d type %.*s\n", i,
-			addr_type->size, addr_type->data);
 
 		if (addr_type->size != 4)
 		{
@@ -354,19 +350,13 @@ static void dns_callback(getdns_context *context,
 			ctxp->ipv6_to_event= evtimer_new(ctxp->base->event_base,
 				timeout_callback, ctxp);
 			clock_gettime(CLOCK_MONOTONIC, &timeout);
-			fprintf(stderr, "dns_callback: now %d.%09d\n",
-				timeout.tv_sec, timeout.tv_nsec);
 			timeout.tv_nsec += TIMEOUT_NS % NS_PER_SEC;
 			timeout.tv_sec += TIMEOUT_NS / NS_PER_SEC;
-			fprintf(stderr, "dns_callback: timeout %d.%09d\n",
-				timeout.tv_sec, timeout.tv_nsec);
 			if (timeout.tv_nsec >= NS_PER_SEC)
 			{
 				timeout.tv_nsec -= NS_PER_SEC;
 				timeout.tv_sec++;
 			}
-			fprintf(stderr, "dns_callback: timeout %d.%09d\n",
-				timeout.tv_sec, timeout.tv_nsec);
 			ctxp->ipv6_timeout= timeout;
 
 			/* The timeout callback will set the timer. */
@@ -376,6 +366,7 @@ static void dns_callback(getdns_context *context,
 		case STATE_DNS_IPV4_CONNECTING:
 			ctxp->state= STATE_CONNECTING;
 
+#if 0
 			fprintf(stderr,
 			"dns_callback: before do_connect, addresses:\n");
 			for (i= 0; i<ctxp->naddrs; i++)
@@ -387,6 +378,7 @@ static void dns_callback(getdns_context *context,
 					NI_NUMERICHOST);
 				fprintf(stderr, "%s\n", addrstr);
 			}
+#endif
 			do_connect(ctxp);
 			break;
 
@@ -403,6 +395,7 @@ static void dns_callback(getdns_context *context,
 		{
 		case STATE_DNS:
 			ctxp->state= STATE_DNS_IPV4_CONNECTING;
+#if 0
 			fprintf(stderr,
 			"dns_callback: before do_connect, addresses:\n");
 			for (i= 0; i<ctxp->naddrs; i++)
@@ -414,6 +407,7 @@ static void dns_callback(getdns_context *context,
 					NI_NUMERICHOST);
 				fprintf(stderr, "%s\n", addrstr);
 			}
+#endif
 			do_connect(ctxp);
 			break;
 
@@ -423,6 +417,7 @@ static void dns_callback(getdns_context *context,
 			event_free(ctxp->ipv6_to_event);
 			ctxp->ipv6_to_event= NULL;
 			ctxp->state= STATE_CONNECTING;
+#if 0
 			fprintf(stderr,
 			"dns_callback: before do_connect, addresses:\n");
 			for (i= 0; i<ctxp->naddrs; i++)
@@ -434,6 +429,7 @@ static void dns_callback(getdns_context *context,
 					NI_NUMERICHOST);
 				fprintf(stderr, "%s\n", addrstr);
 			}
+#endif
 			do_connect(ctxp);
 			break;
 			
@@ -457,10 +453,6 @@ static void timeout_callback(evutil_socket_t fd, short events, void *ref)
 
 	ctxp= ref;
 	clock_gettime(CLOCK_MONOTONIC, &now);
-	fprintf(stderr, "timeout_callback: now %d.%09d\n",
-		now.tv_sec, now.tv_nsec);
-	fprintf(stderr, "timeout_callback: target %d.%09d\n",
-		ctxp->ipv6_timeout.tv_sec, ctxp->ipv6_timeout.tv_nsec);
 
 	if (now.tv_sec < ctxp->ipv6_timeout.tv_sec ||
 		(now.tv_sec == ctxp->ipv6_timeout.tv_sec &&
@@ -471,15 +463,11 @@ static void timeout_callback(evutil_socket_t fd, short events, void *ref)
 		timeout.tv_usec= (ctxp->ipv6_timeout.tv_nsec - now.tv_nsec)/
 			1000 + 1;
 
-		fprintf(stderr, "timeout %d.%06d\n",
-			timeout.tv_sec, timeout.tv_usec);
 		if (timeout.tv_usec < 0)
 		{
 			timeout.tv_usec += US_PER_SEC;
 			timeout.tv_sec--;
 		}
-		fprintf(stderr, "timeout %d.%06d\n",
-			timeout.tv_sec, timeout.tv_usec);
 		evtimer_add(ctxp->ipv6_to_event, &timeout);
 		return;
 	}
@@ -548,14 +536,19 @@ static void connect_callback(evutil_socket_t fd, short events, void *ref)
 	event_free(ap->event);
 	ap->event= NULL;
 
-	fprintf(stderr,  "connect_callback: starting SSL for fd %d\n", sock);
-
 	if (!ctxp->tls_ctx)
 	{
 		ctxp->tls_ctx= SSL_CTX_new(TLS_method());
 	}
 
 	tls= SSL_new(ctxp->tls_ctx);
+
+	if (!SSL_set_tlsext_host_name(tls, ctxp->hostname))
+	{
+		fprintf(stderr,
+			"connect_callback: SSL_set_tlsext_host_name failed\n");
+		abort();
+	}
 
 	assert(!ap->bev);
 	ap->bev= bufferevent_openssl_socket_new(ctxp->base->event_base,
@@ -595,8 +588,6 @@ static void event_callback(struct bufferevent *bev, short what, void *ref)
 	struct bufferevent *lbev;
 
 	ctxp= ref;
-
-	fprintf(stderr, "in event_callback, what 0x%x\n", what);
 
 	if (what != BEV_EVENT_CONNECTED)
 	{

@@ -1,11 +1,16 @@
-LIBGETDNS=/home/philip/src/getdns/libgetdns.a /home/philip/src/getdns/libgetdns_ext_event.a -lunbound -lidn2
+# getdns is broken on debian and ubuntu. Use a local src
+
+# Set the GETDNSSRC variable to the directory where getdns is checked out and
+# compiled
+GETDNSSRC=../../getdns
+
+LIBGETDNS=$(GETDNSSRC)/libgetdns.a $(GETDNSSRC)/libgetdns_ext_event.a -lunbound -lidn2
 LIBLDNS=-lldns
 LIBSSL=-lssl -lcrypto
 
-CFLAGS=-g
+CFLAGS=-g -I$(GETDNSSRC)
 LDFLAGS=-g
 LIBS=-levent -levent_openssl $(LIBGETDNS) $(LIBLDNS) $(LIBSSL)
-
 
 all:	get443_7
 

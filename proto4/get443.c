@@ -110,8 +110,6 @@ static void read_callback(struct bufferevent *bev, void *ref)
 	int r;
 	char line[1024];
 
-	printf("\n\nin read_callback\n\n");
-
 	for (;;)
 	{
 		r= bufferevent_read(bev, line, sizeof(line));

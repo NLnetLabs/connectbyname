@@ -25,7 +25,7 @@ Implementation of connectbyname
 
 #define MAXADDRS	16
 #define TIMEOUT_NS	  25000000	/* 25 ms */
-#if 1
+#if 0
 #undef TIMEOUT_NS
 #define TIMEOUT_NS	5000000000	
 #endif
@@ -492,19 +492,13 @@ static void dns_callback(int result, char type, int count, int ttl,
 			ctxp->ipv6_to_event= evtimer_new(ctxp->base->event_base,
 				timeout_callback, ctxp);
 			clock_gettime(CLOCK_MONOTONIC, &timeout);
-			fprintf(stderr, "dns_callback: now %d.%09d\n",
-				timeout.tv_sec, timeout.tv_nsec);
 			timeout.tv_nsec += TIMEOUT_NS % NS_PER_SEC;
 			timeout.tv_sec += TIMEOUT_NS / NS_PER_SEC;
-			fprintf(stderr, "dns_callback: timeout %d.%09d\n",
-				timeout.tv_sec, timeout.tv_nsec);
 			if (timeout.tv_nsec >= NS_PER_SEC)
 			{
 				timeout.tv_nsec -= NS_PER_SEC;
 				timeout.tv_sec++;
 			}
-			fprintf(stderr, "dns_callback: timeout %d.%09d\n",
-				timeout.tv_sec, timeout.tv_nsec);
 			ctxp->ipv6_timeout= timeout;
 
 			/* The timeout callback will set the timer. */
@@ -514,6 +508,7 @@ static void dns_callback(int result, char type, int count, int ttl,
 		case STATE_DNS_IPV4_CONNECTING:
 			ctxp->state= STATE_CONNECTING;
 
+#if 0
 			fprintf(stderr,
 			"dns_callback: before do_connect, addresses:\n");
 			for (i= 0; i<ctxp->naddrs; i++)
@@ -525,6 +520,7 @@ static void dns_callback(int result, char type, int count, int ttl,
 					NI_NUMERICHOST);
 				fprintf(stderr, "%s\n", addrstr);
 			}
+#endif
 			do_connect(ctxp);
 			break;
 
@@ -564,6 +560,7 @@ static void dns_callback(int result, char type, int count, int ttl,
 		{
 		case STATE_DNS:
 			ctxp->state= STATE_DNS_IPV4_CONNECTING;
+#if 0
 			fprintf(stderr,
 			"dns_callback: before do_connect, addresses:\n");
 			for (i= 0; i<ctxp->naddrs; i++)
@@ -575,6 +572,7 @@ static void dns_callback(int result, char type, int count, int ttl,
 					NI_NUMERICHOST);
 				fprintf(stderr, "%s\n", addrstr);
 			}
+#endif
 			do_connect(ctxp);
 			break;
 
@@ -584,6 +582,7 @@ static void dns_callback(int result, char type, int count, int ttl,
 			event_free(ctxp->ipv6_to_event);
 			ctxp->ipv6_to_event= NULL;
 			ctxp->state= STATE_CONNECTING;
+#if 0
 			fprintf(stderr,
 			"dns_callback: before do_connect, addresses:\n");
 			for (i= 0; i<ctxp->naddrs; i++)
@@ -595,6 +594,7 @@ static void dns_callback(int result, char type, int count, int ttl,
 					NI_NUMERICHOST);
 				fprintf(stderr, "%s\n", addrstr);
 			}
+#endif
 			do_connect(ctxp);
 			break;
 			
@@ -621,10 +621,6 @@ static void timeout_callback(evutil_socket_t fd, short events, void *ref)
 
 	ctxp= ref;
 	clock_gettime(CLOCK_MONOTONIC, &now);
-	fprintf(stderr, "timeout_callback: now %d.%09d\n",
-		now.tv_sec, now.tv_nsec);
-	fprintf(stderr, "timeout_callback: target %d.%09d\n",
-		ctxp->ipv6_timeout.tv_sec, ctxp->ipv6_timeout.tv_nsec);
 
 	if (now.tv_sec < ctxp->ipv6_timeout.tv_sec ||
 		(now.tv_sec == ctxp->ipv6_timeout.tv_sec &&
@@ -635,15 +631,11 @@ static void timeout_callback(evutil_socket_t fd, short events, void *ref)
 		timeout.tv_usec= (ctxp->ipv6_timeout.tv_nsec - now.tv_nsec)/
 			1000 + 1;
 
-		fprintf(stderr, "timeout %d.%06d\n",
-			timeout.tv_sec, timeout.tv_usec);
 		if (timeout.tv_usec < 0)
 		{
 			timeout.tv_usec += US_PER_SEC;
 			timeout.tv_sec--;
 		}
-		fprintf(stderr, "timeout %d.%06d\n",
-			timeout.tv_sec, timeout.tv_usec);
 		evtimer_add(ctxp->ipv6_to_event, &timeout);
 		return;
 	}

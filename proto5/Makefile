@@ -1,10 +1,16 @@
-LIBEVENT=/home/philip/src/libevent-2.1.11-stable
+# getdns is broken on debian and ubuntu. Use a local src
 
-CFLAGS=-g -I$(LIBEVENT)/include
-LDFLAGS=-static -g -L$(LIBEVENT)/.libs
-LDFLAGS=-g -L$(LIBEVENT)/.libs
-LIBS=-levent -levent_openssl -lssl /usr/lib/x86_64-linux-gnu/libgetdns_ex_event.a -L /home/philip/src/getdns-1.7.0 -Wl,-rpath=/home/philip/src/getdns-1.7.0 -lgetdns
+# Set the GETDNSSRC variable to the directory where getdns is checked out and
+# compiled
+GETDNSSRC=../../getdns
 
+LIBGETDNS=$(GETDNSSRC)/libgetdns.a $(GETDNSSRC)/libgetdns_ext_event.a -lunbound -lidn2
+LIBLDNS=-lldns
+LIBSSL=-lssl -lcrypto
+
+CFLAGS=-g -I$(GETDNSSRC)
+LDFLAGS=-g
+LIBS=-levent -levent_openssl $(LIBGETDNS) $(LIBLDNS) $(LIBSSL)
 
 all:	get443_5
 
