@@ -1,7 +1,7 @@
 # This code relies on experimental code that lives in the branch
 # 'philip-proxy-config' in the getdns repository.
 
-# Set the GETDNSSRC variable to the directory where getdns is checkout and
+# Set the GETDNSSRC variable to the directory where getdns is checked out and
 # compiled
 GETDNSSRC=../../getdns
 
@@ -23,6 +23,15 @@ get443.o: connectbyname.h
 
 get443_8: $(GET443_8_OBJ)
 	$(CC) $(LDFLAGS) -o $@ $(GET443_8_OBJ) $(LIBS)
+
+doxygen:
+	if test ! -e doc/header.html ; then \
+		mkdir -p doc; \
+		cp ../etc/header.html doc; \
+	fi ;
+	doxygen config.doxygen
+
+doc:	doxygen
 
 clean:
 	rm -f get443_8 $(GET443_8_OBJ)

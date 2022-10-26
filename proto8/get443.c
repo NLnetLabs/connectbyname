@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 					 */
 	addr_str = "2001:4860:4860::8888";
 	// addr_str = "2a10:3781:2413:1:2a0:c9ff:fe9f:16bd";
-	addr_str = "2606:4700::6812:152c";
+	// addr_str = "2606:4700::6812:152c";
 	getaddrinfo(addr_str, "domain", &hints, &ai);
 	// getaddrinfo("8.8.8.8", "domain", &hints, &ai);
 
@@ -150,7 +150,6 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "connectbyname failed: %d\n", r);
 		exit(1);
 	}
-	fprintf(stderr, "main: &state: %p, ref %p\n", &state, ref);
 	state.cbn_ref= ref;
 
 	r= event_base_dispatch(event_base);
@@ -209,8 +208,6 @@ static void read_callback(struct bufferevent *bev, void *ref)
 {
 	int r;
 	char line[1024];
-
-	printf("\n\nin read_callback\n\n");
 
 	for (;;)
 	{

@@ -26,7 +26,7 @@ Implementation of connectbyname
 
 #define MAXADDRS	16
 #define TIMEOUT_NS	  25000000	/* 25 ms */
-#if 1
+#if 0
 #undef TIMEOUT_NS
 #define TIMEOUT_NS	5000000000	
 #endif
@@ -272,7 +272,6 @@ int connectbyname_asyn(struct cbn_context *cbn_ctx,
 	policy2getdns(cbn_ctx);
 	
 	work_ctx= malloc(sizeof(*work_ctx));
-	fprintf(stderr, "connectbyname_asyn: work_ctx = %p\n", work_ctx);
 	memset(work_ctx, '\0', sizeof(*work_ctx));
 	work_ctx->base= cbn_ctx;
 	work_ctx->hostname= strdup(hostname);
@@ -327,7 +326,6 @@ int connectbyname_asyn(struct cbn_context *cbn_ctx,
 			gdns_r);
 		abort();
 	}
-	fprintf(stderr, "%s\n", getdns_pretty_print_dict(tmp_dict2));
 
 	r= snprintf(danename, sizeof(danename), "_%u._tcp.%s",
 		ntohs(port_ul), hostname);
@@ -401,9 +399,6 @@ static void policy2getdns(struct cbn_context *cbn_ctx)
 
 	top_dict= getdns_dict_create();
 	top_list= getdns_list_create();
-
-	fprintf(stderr, "policy2getdns: resolver_count = %d\n",
-		cbn_ctx->policy.resolver_count);
 
 	for (i = 0; i<cbn_ctx->policy.resolver_count; i++)
 	{
@@ -496,7 +491,6 @@ static void policy2getdns(struct cbn_context *cbn_ctx)
 	}
 	getdns_dict_set_list(top_dict, "resolvers", top_list);
 
-	fprintf(stderr, "policy2getdns: top_dict %s\n", getdns_pretty_print_dict(top_dict));
 	if ((r = getdns_context_set_local_proxy_policy(cbn_ctx->getdns_ctx,
 		top_dict)))
 	{
@@ -688,6 +682,7 @@ static void dns_callback(getdns_context *context,
 			case STATE_DNS_IPV6_WAITING:
 				ctxp->state= STATE_CONNECTING;
 
+#if 0
 				fprintf(stderr,
 			"dns_callback: before do_connect, addresses:\n");
 				for (i= 0; i<ctxp->naddrs; i++)
@@ -699,6 +694,7 @@ static void dns_callback(getdns_context *context,
 						NULL, 0, NI_NUMERICHOST);
 					fprintf(stderr, "%s\n", addrstr);
 				}
+#endif
 				do_connect(ctxp);
 				goto cleanup;
 
@@ -751,7 +747,6 @@ static void dns_callback(getdns_context *context,
 			"no length for 'just_address_answers'", gdns_r);
 		goto cleanup;
 	}
-	printf("len %lu\n", len);
 	got_ipv4= 0;
 	got_ipv6= 0;
 	for (i= 0; i<len; i++)
@@ -785,8 +780,6 @@ static void dns_callback(getdns_context *context,
 				"no 'address_data'", gdns_r);
 			goto cleanup;
 		}
-		fprintf(stderr, "dns_callback: %d type %.*s\n", i,
-			(int)addr_type->size, addr_type->data);
 
 		if (addr_type->size != 4)
 		{
@@ -854,19 +847,13 @@ static void dns_callback(getdns_context *context,
 			ctxp->ipv6_to_event= evtimer_new(ctxp->base->event_base,
 				timeout_callback, ctxp);
 			clock_gettime(CLOCK_MONOTONIC, &timeout);
-			fprintf(stderr, "dns_callback: now %ld.%09ld\n",
-				timeout.tv_sec, timeout.tv_nsec);
 			timeout.tv_nsec += TIMEOUT_NS % NS_PER_SEC;
 			timeout.tv_sec += TIMEOUT_NS / NS_PER_SEC;
-			fprintf(stderr, "dns_callback: timeout %ld.%09ld\n",
-				timeout.tv_sec, timeout.tv_nsec);
 			if (timeout.tv_nsec >= NS_PER_SEC)
 			{
 				timeout.tv_nsec -= NS_PER_SEC;
 				timeout.tv_sec++;
 			}
-			fprintf(stderr, "dns_callback: timeout %ld.%09ld\n",
-				timeout.tv_sec, timeout.tv_nsec);
 			ctxp->ipv6_timeout= timeout;
 
 			/* The timeout callback will set the timer. */
@@ -876,6 +863,7 @@ static void dns_callback(getdns_context *context,
 		case STATE_DNS_IPV4_CONNECTING:
 			ctxp->state= STATE_CONNECTING;
 
+#if 0
 			fprintf(stderr,
 			"dns_callback: before do_connect, addresses:\n");
 			for (i= 0; i<ctxp->naddrs; i++)
@@ -887,6 +875,7 @@ static void dns_callback(getdns_context *context,
 					NI_NUMERICHOST);
 				fprintf(stderr, "%s\n", addrstr);
 			}
+#endif
 			do_connect(ctxp);
 			break;
 
@@ -903,6 +892,7 @@ static void dns_callback(getdns_context *context,
 		{
 		case STATE_DNS:
 			ctxp->state= STATE_DNS_IPV4_CONNECTING;
+#if 0
 			fprintf(stderr,
 			"dns_callback: before do_connect, addresses:\n");
 			for (i= 0; i<ctxp->naddrs; i++)
@@ -914,6 +904,7 @@ static void dns_callback(getdns_context *context,
 					NI_NUMERICHOST);
 				fprintf(stderr, "%s\n", addrstr);
 			}
+#endif
 			do_connect(ctxp);
 			break;
 
@@ -923,6 +914,7 @@ static void dns_callback(getdns_context *context,
 			event_free(ctxp->ipv6_to_event);
 			ctxp->ipv6_to_event= NULL;
 			ctxp->state= STATE_CONNECTING;
+#if 0
 			fprintf(stderr,
 			"dns_callback: before do_connect, addresses:\n");
 			for (i= 0; i<ctxp->naddrs; i++)
@@ -934,6 +926,7 @@ static void dns_callback(getdns_context *context,
 					NI_NUMERICHOST);
 				fprintf(stderr, "%s\n", addrstr);
 			}
+#endif
 			do_connect(ctxp);
 			break;
 			
@@ -1027,7 +1020,7 @@ static void dane_callback(getdns_context *context,
 	}
 #endif
 
-#if 1
+#if 0
 	printf("dane_callback: got\n");
 	printf("%s\n", getdns_pretty_print_dict(response));
 	fflush(stdout);
@@ -1328,7 +1321,6 @@ static void dane_check(struct work_ctx *ctxp)
 		/* We already passed a connection to the user. Wait until
 		 * the user asks for more.
 		 */
-		fprintf(stderr, "dane_check: user already busy\n");
 		return;
 	}
 
@@ -1359,7 +1351,6 @@ static void dane_check(struct work_ctx *ctxp)
 	ctxp->dane_tls_bev= NULL;
 
 	ssl= bufferevent_openssl_get_ssl(bev);
-	fprintf(stderr, "dane_check: ssl = %p\n", ssl);
 
 	cert = SSL_get_peer_certificate(ssl);
 	if (!cert) {
@@ -1376,9 +1367,6 @@ static void dane_check(struct work_ctx *ctxp)
 		goto cleanup;
 	}
 
-	fprintf(stderr, "dane_check: SSL_get_verify_result = %ld\n",
-		SSL_get_verify_result(ssl));
-
 	store= X509_STORE_new();
 	if (X509_STORE_load_locations(store,
 		"/etc/ssl/certs/ca-certificates.crt",
@@ -1389,8 +1377,6 @@ static void dane_check(struct work_ctx *ctxp)
 		goto cleanup;
 	}
 	ldns_r= ldns_dane_verify(rr_list, cert, extra_certs, store);
-
-	fprintf(stderr, "ldns_r == %d\n", ldns_r);
 
 	switch(ldns_r)
 	{
@@ -1428,7 +1414,6 @@ static void dane_check(struct work_ctx *ctxp)
 	}
 	
 cleanup:
-	fprintf(stderr, "dane_check: should do cleanup\n");
 }
 
 /* Called by TLS to tell DANE about a new TLS connection. This function
@@ -1438,7 +1423,6 @@ cleanup:
  */
 static int dane_accept_tls_bev(struct work_ctx *ctxp, struct bufferevent *bev)
 {
-	fprintf(stderr, "in dane_accept_tls_bev\n");
 	if (ctxp->dane_tls_bev)
 		return 0;	/* Already got something. */
 
@@ -1475,10 +1459,6 @@ static void timeout_callback(evutil_socket_t fd, short events, void *ref)
 
 	ctxp= ref;
 	clock_gettime(CLOCK_MONOTONIC, &now);
-	fprintf(stderr, "timeout_callback: now %ld.%09ld\n",
-		now.tv_sec, now.tv_nsec);
-	fprintf(stderr, "timeout_callback: target %ld.%09ld\n",
-		ctxp->ipv6_timeout.tv_sec, ctxp->ipv6_timeout.tv_nsec);
 
 	if (now.tv_sec < ctxp->ipv6_timeout.tv_sec ||
 		(now.tv_sec == ctxp->ipv6_timeout.tv_sec &&
@@ -1489,15 +1469,11 @@ static void timeout_callback(evutil_socket_t fd, short events, void *ref)
 		timeout.tv_usec= (ctxp->ipv6_timeout.tv_nsec - now.tv_nsec)/
 			1000 + 1;
 
-		fprintf(stderr, "timeout %ld.%06ld\n",
-			timeout.tv_sec, timeout.tv_usec);
 		if (timeout.tv_usec < 0)
 		{
 			timeout.tv_usec += US_PER_SEC;
 			timeout.tv_sec--;
 		}
-		fprintf(stderr, "timeout %ld.%06ld\n",
-			timeout.tv_sec, timeout.tv_usec);
 		evtimer_add(ctxp->ipv6_to_event, &timeout);
 		return;
 	}
@@ -1566,15 +1542,12 @@ static void connect_callback(evutil_socket_t fd, short events, void *ref)
 	event_free(ap->event);
 	ap->event= NULL;
 
-	fprintf(stderr,  "connect_callback: starting SSL for fd %d\n", sock);
-
 	if (!ctxp->tls_ctx)
 	{
 		ctxp->tls_ctx= SSL_CTX_new(TLS_method());
 	}
 
 	tls= SSL_new(ctxp->tls_ctx);
-	fprintf(stderr, "connect_callback: tls = %p\n", tls);
 
 	if (!SSL_set_tlsext_host_name(tls, ctxp->hostname))
 	{
@@ -1599,7 +1572,6 @@ static void connect_to_callback(evutil_socket_t fd, short events, void *ref)
 
 	ctxp= ref;
 
-	fprintf(stderr, "connect_to_callback: restarting connect\n");
 	do_connect(ctxp);
 }
 
@@ -1621,8 +1593,6 @@ static void event_callback(struct bufferevent *bev, short what, void *ref)
 	struct bufferevent *lbev;
 
 	ctxp= ref;
-
-	fprintf(stderr, "in event_callback, what 0x%x\n", what);
 
 	if (what != BEV_EVENT_CONNECTED)
 	{
@@ -1778,8 +1748,6 @@ static void do_connect(struct work_ctx *ctxp)
 	struct addrlist *ap;
 	struct timespec now, timeout_ns;
 	struct timeval timeout;
-
-	fprintf(stderr, "in do_connect\n");
 
 	done= 1;	/* Assume we are done. Will be cleared when
 			 * there is work to do.

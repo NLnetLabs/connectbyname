@@ -4,6 +4,12 @@ connectbyname.h
 Interface for connectbyname
 */
 
+/** 
+ * \file connectbyname.h
+ *
+ * This is the interface to connectbyname
+ */
+
 #include <getdns/getdns.h>
 #include <ldns/ldns.h>
 
@@ -128,8 +134,7 @@ struct cbn_context
 /**
  * Initializes the cbn_policy
  * @param policy   The policy to initialize, already allocated or on the
- *                 stack.  When policy is NULL, a new cbn_policy will be
- *                 allocated.
+ *                 stack.  
  * @param name     The name from  which to determine what policy setting
  *                 to inherit.
  * @param settings A bitwise-orred value witth settings for the individual
@@ -161,20 +166,71 @@ struct cbn_policy *cbn_policy_init(struct cbn_policy *policy)
 static inline struct cbn_policy *cbn_policy_new()
 { return cbn_policy_init2(NULL, NULL, 0); }
 
+/**
+ * Add a DNS resolver policy to a connectbyname policy
+ * @param policy   connectbyname policy
+ * @param resolver resolver policy
+ * @return         returns enum cbn_status
+ */
 int cbn_policy_add_resolver(struct cbn_policy *policy,
 	struct cbnp_resolver *resolver);
 
+/**
+ * Initialize a connectbyname context
+ * @param cbn_ctx    context to initialize
+ * @param event_base event base to use for asynchronous I/O
+ * @return         returns enum cbn_status
+ */
 int cbn_init(struct cbn_context *cbn_ctx, struct event_base *event_base);
+
+/**
+ * Initialize a connectbyname context
+ * @param cbn_ctx    context to initialize
+ * @param policy     policy for this context
+ * @param name 
+ * @param flags 
+ * @param event_base event base to use for asynchronous I/O
+ * @return         returns enum cbn_status
+ */
 int cbn_init2(struct cbn_context *cbn_ctx, struct cbn_policy *policy,
 	char *name, int flags, struct event_base *event_base);
+/**
+ * Clean up connectbyname context
+ * @param cbn_ctx  context to clean up
+ * @return         returns enum cbn_status
+ */
 void cbn_clean(struct cbn_context *cbn_ctx);
 
+/**
+ * Synchronous connectbyname call
+ * @param cbn_ctx  Configuration context
+ * @param hostname DNS name to connect to
+ * @param servname Name of service (port) to connect to
+ * @param fdp      Result filedescriptor
+ * @return         returns enum cbn_status
+ */
 int connectbyname(struct cbn_context *cbn_ctx,
 	const char *hostname, const char *servname, int *fdp);
 
+/**
+ * Asynchronous connectbyname call
+ * @param cbn_ctx  Configuration context
+ * @param hostname DNS name to connect to
+ * @param servname Name of service (port) to connect to
+ * @param user_cb  Callback function on success
+ * @param error_cb Callback function on error
+ * @param user_ref User reference for callback
+ * @param refp     Library reference to this call
+ * @return         returns enum cbn_status
+ */
 int connectbyname_asyn(struct cbn_context *cbn_ctx,
 	const char *hostname, const char *servname,
 	cbn_callback_T user_cb, cbn_callback_error_T error_cb,
 	void *user_ref, void **refp);
 
+/**
+ * Free the state associated with a call to connectbyname_asyn
+ * @param ref      Reference returned by connectbyname_asyn
+ * @return         returns enum cbn_status
+ */
 void connectbyname_free(void *ref);
