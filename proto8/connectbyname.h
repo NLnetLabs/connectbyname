@@ -4,6 +4,40 @@ connectbyname.h
 Interface for connectbyname
 */
 
+/**
+\mainpage CONNECTBYNAME Documentation
+
+\section introduction Introduction
+
+The goal of the connectbyname library to simply obtaining a TLS connection
+given a DNS name and a service name.
+
+\section using_connectbyname Using connectbyname
+
+The first is to create a libevent base using event_base_new.
+
+The second step optional. This step sets a DNS upstream resolver policy.
+This done initializing a struct cbn_policy using cbn_policy_init2.
+Then fill one or more struct cbnp_resolver an add them to the policy using
+cbn_policy_add_resolver
+
+The third step is to initialize a struct cbn_context using cbn_init2. This
+gets the policy and the event base as parameters.
+
+Then as fourth step, the main call, connectbyname_asyn, which gets the 
+context and two user defined callback functions as parameters.
+
+The first user callback will be called upon success. This callback gets a
+struct bufferevent pointer. This can be used to read from or write to the
+TLS connection.
+
+The second user callback is for errors. This callback get a struct cbn_error
+that describes the error.
+
+Finally, it is necessary to give control to libevent by calling 
+event_base_dispatch. 
+**/
+
 /** 
  * \file connectbyname.h
  *
