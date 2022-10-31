@@ -35,3 +35,4 @@ doc:	doxygen
 
 clean:
 	rm -f get443_8 $(GET443_8_OBJ)
+	rm -rf doc
