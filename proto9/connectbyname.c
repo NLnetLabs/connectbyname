@@ -1710,6 +1710,7 @@ static void restart_svcb(struct work_ctx *ctxp)
 			sin4p->sin_port= ctxp->target_port;
 			alist->addrlen= sizeof(*sin4p);
 			ctxp->naddrs++;
+			merge_v4_v6(ctxp);
 		}
 		break;
 
@@ -1749,6 +1750,7 @@ static void restart_svcb(struct work_ctx *ctxp)
 			sin6p->sin6_port= ctxp->target_port;
 			alist->addrlen= sizeof(*sin6p);
 			ctxp->naddrs++;
+			merge_v4_v6(ctxp);
 		}
 		break;
 
@@ -1765,7 +1767,16 @@ static void restart_svcb(struct work_ctx *ctxp)
 
 	switch(ctxp->state)
 	{
+	case STATE_DNS_WAITING:
+		/* The A query completed, but the AAAA query didn't. If we
+		 * have any IPv6 hints, then start connecting. 
+		 */
+		if (got_ipv6)
+			goto do_connect;
+		break;
+
 	case STATE_DNS_DONE:
+do_connect:
 		/* Connect */
 		ctxp->state= STATE_CONNECTING;
 
