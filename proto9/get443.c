@@ -19,6 +19,8 @@ Send a HTTP GET request to a target and print the result.
 struct state
 {
 	char *hostname;
+	char *hostname_port;
+	char *path;
 	struct event_base *event_base;
 	struct event *event;
 	void *cbn_ref;
@@ -26,6 +28,8 @@ struct state
 	struct cbn_context cbn_ctx;
 };
 
+static void parse_url(char *url, char **schemep,  char **host_portp,
+	char **hostnamep, char **portp, char **pathp);
 static void callback(struct bufferevent *bev, void *ref);
 static void error_cb(struct cbn_error *error, void *ref);
 static void read_callback(struct bufferevent *bev, void *ref);
@@ -36,7 +40,7 @@ int main(int argc, char *argv[])
 {
 	int r, s;
 	FILE *f;
-	char *hostname;
+	char *scheme, *hostname_port, *hostname, *port_str, *path;
 	void *ref;
 	struct event_base *event_base;
 	struct addrinfo *ai, *tmp_ai;
@@ -50,8 +54,12 @@ int main(int argc, char *argv[])
 	if (argc != 2)
 		usage();
 
-	hostname= argv[1];
+	parse_url(argv[1], &scheme, &hostname_port, &hostname, &port_str,
+		&path);
+
 	state.hostname= hostname;
+	state.hostname_port= hostname_port;
+	state.path= path;
 
 	event_enable_debug_mode();
 	event_base= event_base_new();
@@ -70,7 +78,7 @@ int main(int argc, char *argv[])
 	resolver1.settings= 
 		// CBN_UNENCRYPTED |
 		// CBN_UNAUTHENTICATED_ENCRYPTION |
-		CBN_AUTHENTICATED_ENCRYPTION |
+		// CBN_AUTHENTICATED_ENCRYPTION |
 		// CBN_PKIX_AUTH_REQUIRED |
 		// CBN_DANE_AUTH_REQUIRED |
 		CBN_DEFAULT_DISALLOW_OTHER_TRANSPORTS |
@@ -85,7 +93,7 @@ int main(int argc, char *argv[])
 		CBN_ALLOW_DOQ; // |
 		// CBN_DISALLOW_DOQ;
 	resolver1.domain_name= "dns.google";
-	// resolver1.domain_name= NULL;
+	resolver1.domain_name= NULL;
 	for (resolver1.naddrs= 0, tmp_ai= ai;
 		resolver1.naddrs < CBNPR_MAX_ADDRS && tmp_ai != NULL;
 		resolver1.naddrs++, tmp_ai= tmp_ai->ai_next)
@@ -96,6 +104,7 @@ int main(int argc, char *argv[])
 	}
 	resolver1.svcparams= "port=4242 no-default-alpn alpn=h2 mandatory=no-default-alpn,alpn";
 	resolver1.svcparams= "no-default-alpn alpn=h2 mandatory=no-default-alpn,alpn";
+	resolver1.svcparams= NULL;
 	resolver1.interface= "foo";
 	resolver1.interface= NULL;
 
@@ -122,7 +131,7 @@ int main(int argc, char *argv[])
 		CBN_ALLOW_DOQ; // |
 		// CBN_DISALLOW_DOQ;
 	resolver2.domain_name= "dns.google";
-	// resolver2.domain_name= NULL;
+	resolver2.domain_name= NULL;
 	for (resolver2.naddrs= 0, tmp_ai= ai;
 		resolver2.naddrs < CBNPR_MAX_ADDRS && tmp_ai != NULL;
 		resolver2.naddrs++, tmp_ai= tmp_ai->ai_next)
@@ -133,6 +142,7 @@ int main(int argc, char *argv[])
 	}
 	resolver2.svcparams= "port=4242 no-default-alpn alpn=h2 mandatory=no-default-alpn,alpn";
 	resolver2.svcparams= "no-default-alpn alpn=h2 mandatory=no-default-alpn,alpn";
+	resolver2.svcparams= NULL;
 	resolver2.interface= "foo";
 	resolver2.interface= NULL;
 
@@ -142,8 +152,24 @@ int main(int argc, char *argv[])
 
 	freeaddrinfo(ai);
 
+	/* If port_str == NULL, try to compute port from scheme */
+	if (port_str == NULL)
+	{
+		if (strcmp(scheme, "http") == 0 ||
+			strcmp(scheme, "https") == 0)
+		{
+			port_str= strdup(scheme);
+		}
+		else
+		{
+			fprintf(stderr, "no default port for scheme %s\n",
+				scheme);
+			exit(1);
+		}
+	}
+
 	cbn_init2(&state.cbn_ctx, &policy, "name", 0, event_base);
-	r= connectbyname_asyn(&state.cbn_ctx, hostname, "https",
+	r= connectbyname_asyn(&state.cbn_ctx, hostname, port_str,
 		callback, error_cb, &state, &ref);
 	if (r)
 	{
@@ -157,29 +183,127 @@ int main(int argc, char *argv[])
 	fprintf(stderr, "event_base_dispatch returned: %d\n", r);
 	abort();
 
-	f= fdopen(s, "r+");
-	if (f == NULL)
+	exit(0);
+}
+
+static void parse_url(char *url, char **schemep,  char **hostname_portp,
+	char **hostnamep, char **portp, char **pathp)
+{
+	size_t len;
+	char *p1, *p2;
+	char *scheme, *hostname_port, *hostname, *port, *path;
+
+	/* We need a scheme. First reject URLs that start with a slash */
+	if (url[0] == '/')
 	{
-		fprintf(stderr, "fdopen failed: %s\n", strerror(errno));
+		fprintf(stderr, "parse_url: scheme required in URL %s\n",
+			url);
 		exit(1);
 	}
-	fprintf(f, "GET / HTTP/1.1\r\nHost: %s\r\n\r\n", hostname);
-	fflush(f);
-	shutdown(s, SHUT_WR);
-	for(;;)
+	p1= strchr(url, ':');
+	if (p1 == NULL || p1[1] != '/' || p1[2] != '/')
 	{
-		r= fread(buf, 1, sizeof(buf), f);
-		if (r == 0)
-		{
-			if (feof(f))
-				break;
-			fprintf(stderr, "read error: %s\n", strerror(errno));
-			exit(1);
-		}
-		fwrite(buf, r, 1, stdout);
+		fprintf(stderr, "parse_url: scheme required in URL %s\n",
+			url);
+		exit(1);
 	}
-	fclose(f);
-	exit(0);
+	len= p1-url;
+	scheme= malloc(len+1);
+	memcpy(scheme, url, len);
+	scheme[len]= '\0';
+	p1 += 3;
+	
+	fprintf(stderr, "parse_url: scheme %s\n", scheme);
+
+	/* Hostname and port */
+	p2= strchr(p1, '/');
+	if (p2 == NULL)
+	{
+		hostname_port= strdup(p1);
+	}
+	else
+	{
+		len= p2-p1;
+		hostname_port= malloc(len+1);
+		memcpy(hostname_port, p1, len);
+		hostname_port[len]= '\0';
+	}
+
+	fprintf(stderr, "parse_url: hostname and port %s\n", hostname_port);
+
+	/* Hostname could be an IPv6 literal. Check that first */
+	if (hostname_port[0] == '[')
+	{
+		p1= strchr(hostname_port, ']');
+		if (p1 == NULL)
+		{
+			fprintf(stderr, "parse_url: bad IPv6 literal in %s\n",
+				hostname_port);
+			abort();
+		}
+		len= p1-(hostname_port+1);
+		hostname= malloc(len+1);
+		memcpy(hostname, hostname_port+1, len);
+		hostname[len]= '\0';
+		
+		p1++;
+
+		if (p1[0] == ':')
+			; /* Okay, start of port */
+		else if (p1[0] == '\0')
+		{
+			/* No port, set p1 to NULL, to be consistent with 
+			 * strchr(..., ':')
+			 */
+			p1= NULL;
+		}
+		else
+		{
+			fprintf(stderr, "parse_url: bad port part %s\n", p1);
+		}
+	}
+	else
+	{
+		p1= strchr(hostname_port, ':');
+		if (p1 == NULL)
+		{
+			hostname= strdup(hostname_port);
+		}
+		else
+		{
+			len= p1-hostname_port;
+			hostname= malloc(len+1);
+			memcpy(hostname, hostname_port, len);
+			hostname[len]= '\0';
+		}
+	}
+
+	fprintf(stderr, "parse_url: hostname %s\n", hostname);
+
+	if (!p1)
+	{
+		port= NULL;
+	}
+	else
+		port= strdup(p1+1);
+
+	fprintf(stderr, "parse_url: port %s\n", port);
+
+	/* Path */
+	if (p2)
+	{
+		path= strdup(p2);
+	}
+	else
+		path= NULL;
+
+	fprintf(stderr, "parse_url: path %s\n", path);
+
+	*schemep= scheme;
+	*hostname_portp= hostname_port;
+	*hostnamep= hostname;
+	*portp= port;
+	*pathp= path;
 }
 
 static void callback(struct bufferevent *bev, void *ref)
@@ -190,7 +314,11 @@ static void callback(struct bufferevent *bev, void *ref)
 	statep= ref;
 
 	snprintf(reqline, sizeof(reqline),
-		"GET / HTTP/1.1\r\nHost: %s\r\n\r\n", statep->hostname);
+		"GET %s HTTP/1.1\r\nHost: %s\r\n\r\n",
+		statep->path ? statep->path : "/",
+		statep->hostname_port);
+
+	fprintf(stderr, "callback: sending request %s\n", reqline);
 	
 	/* Assume write will not block */
 	bufferevent_write(bev, reqline, strlen(reqline));
