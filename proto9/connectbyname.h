@@ -15,6 +15,7 @@ enum cbn_status
 	CBN_GETDNS_ERROR,
 	CBN_GETDNS_REPSTATUS,
 	CBN_A_AAAA_TIMEOUT,
+	CBN_NO_A_AAAA,
 	CBN_HOSTNAME_TOO_LONG,
 	CBN_ERROR_CALLBACK,
 	CBN_LDNS_ERROR,
@@ -59,6 +60,8 @@ struct cbn_error
 	(errp)->u.getdns_repstatus= r
 #define SET_ERROR_A_AAAA_TIMEOUT(errp)			\
 	SET_ERROR_GENERIC(errp, CBN_A_AAAA_TIMEOUT)
+#define SET_ERROR_NO_A_AAAA(errp)			\
+	SET_ERROR_GENERIC(errp, CBN_NO_A_AAAA)
 #define SET_ERROR_LDNS(errp, msgstr)			\
 	SET_ERROR_GENERIC(errp, CBN_LDNS_ERROR),	\
 	(errp)->msg= msgstr
@@ -116,7 +119,7 @@ struct cbn_policy
 {
 	int resolver_count;
 	struct cbnp_resolver resolver[MAX_RESOLVERS];
-	char *scheme;
+	char scheme[16];
 };
 
 struct cbn_context
@@ -161,6 +164,9 @@ struct cbn_policy *cbn_policy_init(struct cbn_policy *policy)
  */
 static inline struct cbn_policy *cbn_policy_new()
 { return cbn_policy_init2(NULL, NULL, 0); }
+
+int cbn_policy_set_scheme(struct cbn_policy *policy,
+	const char *scheme);
 
 int cbn_policy_add_resolver(struct cbn_policy *policy,
 	struct cbnp_resolver *resolver);

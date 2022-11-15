@@ -194,6 +194,7 @@ static void do_connect(struct work_ctx *ctxp);
 static struct bufferevent *tls_get(struct work_ctx *ctxp);
 static void dane_check(struct work_ctx *ctxp);
 static void restart_svcb(struct work_ctx *ctxp);
+static int equal_domain(char *d1, char *d2);
 static void ts_add_ns(struct timespec *tsp, long ns);
 static void ts_sub(struct timespec *res,
 	struct timespec *v1, struct timespec *v2);
@@ -246,6 +247,13 @@ struct cbn_policy *cbn_policy_init2(
 	memset(policy, '\0', sizeof(*policy));
 }
 
+int cbn_policy_set_scheme(struct cbn_policy *policy,
+	const char *scheme)
+{
+	/* Linux doesn't seem to have strlcpy */
+	snprintf(policy->scheme, sizeof(policy->scheme), "%s", scheme);
+}
+
 int cbn_policy_add_resolver(struct cbn_policy *policy,
 	struct cbnp_resolver *resolver)
 {
@@ -288,6 +296,8 @@ int connectbyname_asyn(struct cbn_context *cbn_ctx,
 	getdns_dict *extensions;
 	getdns_dict *tmp_dict, *tmp_dict2;
 	char danename[256];
+	char prefixbuf[80];
+	char svcbname[256];
 
 	/* Parse servname */
 	port_ul= strtoul(servname, &next, 10);
@@ -387,9 +397,9 @@ int connectbyname_asyn(struct cbn_context *cbn_ctx,
 			svcb_prefix= NULL;
 			if (port_ul != htons(443))
 			{
-				fprintf(stderr,
-				"connectbyname_asyn: should do prefix\n");
-				abort();
+				snprintf(prefixbuf, sizeof(prefixbuf),
+					"_%u._https", ntohs(port_ul));
+				svcb_prefix= prefixbuf;
 			}
 		}
 		else
@@ -463,14 +473,25 @@ int connectbyname_asyn(struct cbn_context *cbn_ctx,
 	if (svcb_prefix)
 	{
 		fprintf(stderr,
-			"connectbyname_asyn: should handle svcb_prefix\n");
-		abort();
+			"connectbyname_asyn: should handle svcb_prefix %s\n",
+			svcb_prefix);
+		r= snprintf(svcbname, sizeof(svcbname), "%s.%s",
+			svcb_prefix, hostname);
+		if (r >= sizeof(svcbname))
+		{
+			fprintf(stderr, "SVCB name too big for buffer\n");
+			return CBN_HOSTNAME_TOO_LONG;
+		}
+	}
+	else
+	{
+		snprintf(svcbname, sizeof(svcbname), "%s", hostname);
 	}
 	if (work_ctx->do_https_query)
 	{
 		work_ctx->state_svcb= STATE_SVCB_DNS;
 		gdns_r= getdns_general(cbn_ctx->getdns_ctx,
-			hostname, GETDNS_RRTYPE_HTTPS,
+			svcbname, GETDNS_RRTYPE_HTTPS,
 			extensions, work_ctx, &work_ctx->trans_id_svcb,
 			svcb_callback);
 	}
@@ -853,28 +874,23 @@ static void dns_callback(getdns_context *context,
 			ctxp->state_aaaa= STATE_AAAA_FAILED;
 			switch(ctxp->state)
 			{
-#if 0
 			case STATE_DNS:
-				ctxp->state= STATE_DNS_IPV4_ONLY;
-				goto cleanup;
-
-			case STATE_DNS_IPV6_WAITING:
-				ctxp->state= STATE_CONNECTING;
-
-				fprintf(stderr,
-			"dns_callback: before do_connect, addresses:\n");
-				for (i= 0; i<ctxp->naddrs; i++)
+				/* Check the state of A query */
+				switch(ctxp->state_a)
 				{
-					getnameinfo((struct sockaddr *)
-						&ctxp->mlist[i]->addr,
-						ctxp->mlist[i]->addrlen, 
-						addrstr, sizeof(addrstr),
-						NULL, 0, NI_NUMERICHOST);
-					fprintf(stderr, "%s\n", addrstr);
+				case STATE_A_DNS:
+					/* A query still busy. Nothing to do */
+					break;
+
+				default:
+					fprintf(stderr,
+			"%s, %d, dns_callback: unknown state_a %d\n",
+						__FILE__, __LINE__,
+						ctxp->state_a);
+					abort();
 				}
-				do_connect(ctxp);
 				goto cleanup;
-#endif
+
 
 			default:
 				fprintf(stderr,
@@ -1052,24 +1068,6 @@ static void dns_callback(getdns_context *context,
 			}
 			break;
 
-#if 0
-		case STATE_DNS_IPV4_CONNECTING:
-			ctxp->state= STATE_CONNECTING;
-
-			fprintf(stderr,
-			"dns_callback: before do_connect, addresses:\n");
-			for (i= 0; i<ctxp->naddrs; i++)
-			{
-				getnameinfo((struct sockaddr *)
-					&ctxp->mlist[i]->addr,
-					ctxp->mlist[i]->addrlen, 
-					addrstr, sizeof(addrstr), NULL, 0,
-					NI_NUMERICHOST);
-				fprintf(stderr, "%s\n", addrstr);
-			}
-			do_connect(ctxp);
-			break;
-#endif
 
 		default:
 			fprintf(stderr,
@@ -1097,21 +1095,6 @@ static void dns_callback(getdns_context *context,
 					ctxp->state_a);
 				abort();
 			}
-#if 0
-			ctxp->state= STATE_DNS_IPV4_CONNECTING;
-			fprintf(stderr,
-			"dns_callback: before do_connect, addresses:\n");
-			for (i= 0; i<ctxp->naddrs; i++)
-			{
-				getnameinfo((struct sockaddr *)
-					&ctxp->mlist[i]->addr,
-					ctxp->mlist[i]->addrlen, 
-					addrstr, sizeof(addrstr), NULL, 0,
-					NI_NUMERICHOST);
-				fprintf(stderr, "%s\n", addrstr);
-			}
-			do_connect(ctxp);
-#endif
 			break;
 
 		case STATE_DNS_WAITING:
@@ -1121,22 +1104,6 @@ static void dns_callback(getdns_context *context,
 			ctxp->ipv6_to_event= NULL;
 			ctxp->state= STATE_DNS_DONE;
 			break;
-#if 0
-			ctxp->state= STATE_CONNECTING;
-			fprintf(stderr,
-			"dns_callback: before do_connect, addresses:\n");
-			for (i= 0; i<ctxp->naddrs; i++)
-			{
-				getnameinfo((struct sockaddr *)
-					&ctxp->mlist[i]->addr,
-					ctxp->mlist[i]->addrlen, 
-					addrstr, sizeof(addrstr), NULL, 0,
-					NI_NUMERICHOST);
-				fprintf(stderr, "%s\n", addrstr);
-			}
-			do_connect(ctxp);
-			break;
-#endif
 			
 		default:
 			fprintf(stderr,
@@ -1151,6 +1118,26 @@ static void dns_callback(getdns_context *context,
 		case STATE_SVCB_DNS:
 			/* SVCB query is busy. Wait until it is done. */
 			goto cleanup;
+
+		case STATE_SVCB_DONE:
+			fprintf(stderr,
+		"dns_callback: state_a %d, state_aaaa %d, state_svcb %d\n",
+				ctxp->state_a, ctxp->state_aaaa,
+				ctxp->state_svcb);
+			ctxp->state= STATE_CONNECTING;
+			fprintf(stderr,
+			"dns_callback: before do_connect, addresses:\n");
+			for (i= 0; i<ctxp->naddrs; i++)
+			{
+				getnameinfo((struct sockaddr *)
+					&ctxp->mlist[i]->addr,
+					ctxp->mlist[i]->addrlen, 
+					addrstr, sizeof(addrstr), NULL, 0,
+					NI_NUMERICHOST);
+				fprintf(stderr, "%s\n", addrstr);
+			}
+			do_connect(ctxp);
+			break;
 
 		default:
 			fprintf(stderr,
@@ -1494,7 +1481,7 @@ static void dane_callback(getdns_context *context,
 	{
 		/* No TLSA record */
 		ctxp->dane_status= DANE_NO;
-		goto cleanup;
+		goto check_dane;
 	}
 
 	gdns_r= getdns_dict_get_int(response, "status",
@@ -1678,7 +1665,7 @@ static void restart_svcb(struct work_ctx *ctxp)
 		fprintf(stderr, "restart_svcb: no SVCB left\n");
 	}
 
-	if (strcasecmp(svcbp->target, ctxp->target_name) != 0)
+	if (!equal_domain(svcbp->target, ctxp->target_name))
 	{
 		fprintf(stderr,
 			"restart_svcb: should restart A/AAAA/DANE lookups\n");
@@ -1767,6 +1754,17 @@ static void restart_svcb(struct work_ctx *ctxp)
 
 	switch(ctxp->state)
 	{
+	case STATE_DNS:
+		/* Neither A nor AAAA queries complete yet. If we have any 
+		 * IPv6 hints, start connecting. If we only have IPv4, we
+		 * should set a timer.
+		 */
+		if (got_ipv6)
+			goto do_connect;
+		fprintf(stderr,
+			"restart_svcb: should handle IPv4-only hints\n");
+		abort();
+
 	case STATE_DNS_WAITING:
 		/* The A query completed, but the AAAA query didn't. If we
 		 * have any IPv6 hints, then start connecting. 
@@ -1799,6 +1797,25 @@ do_connect:
 			ctxp->state);
 		abort();
 	}
+}
+
+static int equal_domain(char *d1, char *d2)
+{
+	size_t d1len, d2len;
+
+	d1len= strlen(d1);
+	d2len= strlen(d2);
+
+	/* Adjust lengths to remove trailig dots */
+	if (d1len > 0 && d1[d1len-1] == '.')
+		d1len--;
+	if (d2len > 0 && d2[d2len-1] == '.')
+		d2len--;
+	if (d1len != d2len)
+		return 0;
+	if (strncasecmp(d1, d2, d1len) != 0)
+		return 0;
+	return 1;
 }
 
 /* Called by TLS to tell DANE about a new TLS connection. This function
@@ -2130,14 +2147,6 @@ static void svcb_callback(getdns_context *context,
 			}
 			dname= ldns_buffer_export2str(buffer);
 			fprintf(stderr, "svcb_callback: dname %s\n", dname);
-
-			if (strcmp(dname, ".") != 0)
-			{
-				fprintf(stderr,
-				"svcb_callback: should handle target: %s\n",
-					dname);
-				abort();
-			}
 
 			rdf= ldns_rr_rdf(rr, 2);
 			if (rdf == NULL)
@@ -2692,6 +2701,14 @@ static void do_connect(struct work_ctx *ctxp)
 	struct timeval timeout;
 
 	fprintf(stderr, "in do_connect\n");
+
+	if (ctxp->naddrs == 0)
+	{
+		/* No addresses, report error */
+		SET_ERROR_NO_A_AAAA(&ctxp->a_aaaa_error);
+		ctxp->error_cb(&ctxp->a_aaaa_error, ctxp->user_ref);
+		return;
+	}
 
 	done= 1;	/* Assume we are done. Will be cleared when
 			 * there is work to do.

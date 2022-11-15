@@ -147,6 +147,7 @@ int main(int argc, char *argv[])
 	resolver2.interface= NULL;
 
 	cbn_policy_init2(&policy, "name", 0);
+	cbn_policy_set_scheme(&policy, scheme);
 	cbn_policy_add_resolver(&policy, &resolver1);
 	cbn_policy_add_resolver(&policy, &resolver2);
 
