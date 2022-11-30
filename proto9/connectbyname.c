@@ -1672,6 +1672,8 @@ static void restart_svcb(struct work_ctx *ctxp)
 		abort();
 	}
 
+	got_ipv4= 0;
+	got_ipv6= 0;
 	switch(ctxp->state_a)
 	{
 	case STATE_A_DNS:
