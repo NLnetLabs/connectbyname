@@ -3,9 +3,9 @@
 
 
 ADD                                                         P.C. Homburg
-Internet-Draft                                              11 July 2022
+Internet-Draft                                           5 December 2022
 Intended status: Standards Track                                        
-Expires: 12 January 2023
+Expires: 8 June 2023
 
 
                  Control Options For DNS Client Proxies
@@ -40,7 +40,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 12 January 2023.
+   This Internet-Draft will expire on 8 June 2023.
 
 Copyright Notice
 
@@ -53,16 +53,16 @@ Copyright Notice
 
 
 
-Homburg                  Expires 12 January 2023                [Page 1]
+Homburg                    Expires 8 June 2023                  [Page 1]
 
-Internet-Draft                    codcp                        July 2022
+Internet-Draft                    codcp                    December 2022
 
 
    Please review these documents carefully, as they describe your rights
    and restrictions with respect to this document.  Code Components
-   extracted from this document must include Simplified BSD License text
-   as described in Section 4.e of the Trust Legal Provisions and are
-   provided without warranty as described in the Simplified BSD License.
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
 
 Table of Contents
 
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Homburg                  Expires 12 January 2023                [Page 2]
+Homburg                    Expires 8 June 2023                  [Page 2]
 
-Internet-Draft                    codcp                        July 2022
+Internet-Draft                    codcp                    December 2022
 
 
       described in I.D.ietf-quic-http (expired draft)
@@ -165,9 +165,9 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 12 January 2023                [Page 3]
+Homburg                    Expires 8 June 2023                  [Page 3]
 
-Internet-Draft                    codcp                        July 2022
+Internet-Draft                    codcp                    December 2022
 
 
    For authentication we can have a mix of PKIX and DANE.  Options are
@@ -221,9 +221,9 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 12 January 2023                [Page 4]
+Homburg                    Expires 8 June 2023                  [Page 4]
 
-Internet-Draft                    codcp                        July 2022
+Internet-Draft                    codcp                    December 2022
 
 
    Finally, the TRUST ANCHOR Option, provides the application with a
@@ -277,9 +277,9 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 12 January 2023                [Page 5]
+Homburg                    Expires 8 June 2023                  [Page 5]
 
-Internet-Draft                    codcp                        July 2022
+Internet-Draft                    codcp                    December 2022
 
 
    A 
@@ -333,9 +333,9 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 12 January 2023                [Page 6]
+Homburg                    Expires 8 June 2023                  [Page 6]
 
-Internet-Draft                    codcp                        July 2022
+Internet-Draft                    codcp                    December 2022
 
 
    Interface Name Length
@@ -389,9 +389,9 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 12 January 2023                [Page 7]
+Homburg                    Expires 8 June 2023                  [Page 7]
 
-Internet-Draft                    codcp                        July 2022
+Internet-Draft                    codcp                    December 2022
 
 
       DANE record has a Certificate Usage Field.  For some values of
@@ -445,9 +445,9 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 12 January 2023                [Page 8]
+Homburg                    Expires 8 June 2023                  [Page 8]
 
-Internet-Draft                    codcp                        July 2022
+Internet-Draft                    codcp                    December 2022
 
 
    Finally, an application can specify its own resolvers or rely on the
@@ -501,9 +501,9 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 12 January 2023                [Page 9]
+Homburg                    Expires 8 June 2023                  [Page 9]
 
-Internet-Draft                    codcp                        July 2022
+Internet-Draft                    codcp                    December 2022
 
 
 6.  PROXY SCOPE OPTION
@@ -557,9 +557,9 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 12 January 2023               [Page 10]
+Homburg                    Expires 8 June 2023                 [Page 10]
 
-Internet-Draft                    codcp                        July 2022
+Internet-Draft                    codcp                    December 2022
 
 
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
@@ -613,9 +613,9 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 12 January 2023               [Page 11]
+Homburg                    Expires 8 June 2023                 [Page 11]
 
-Internet-Draft                    codcp                        July 2022
+Internet-Draft                    codcp                    December 2022
 
 
    If the stub resolver receives a reply without a PROXY CONTROL Option
@@ -669,9 +669,9 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 12 January 2023               [Page 12]
+Homburg                    Expires 8 June 2023                 [Page 12]
 
-Internet-Draft                    codcp                        July 2022
+Internet-Draft                    codcp                    December 2022
 
 
 8.2.  Server Processing
@@ -725,9 +725,9 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 12 January 2023               [Page 13]
+Homburg                    Expires 8 June 2023                 [Page 13]
 
-Internet-Draft                    codcp                        July 2022
+Internet-Draft                    codcp                    December 2022
 
 
 9.  Connection Between Stub Resolver And Proxy
@@ -774,21 +774,21 @@ Internet-Draft                    codcp                        July 2022
     TBD     PROXY SCOPE    Standard   RFC xxxx
     TBD     TRUST ANCHOR   Standard   RFC xxxx
 
-   IANA has assigned the following DNS response code as an early
-   allocation per [RFC7120]:
+   IANA has assigned the following Extended DNS Error code:
 
 
 
 
 
-Homburg                  Expires 12 January 2023               [Page 14]
+
+Homburg                    Expires 8 June 2023                 [Page 14]
 
-Internet-Draft                    codcp                        July 2022
+Internet-Draft                    codcp                    December 2022
 
 
-    RCODE    Name             Description                   Reference
-   -------- ---------------- ----------------------------- -----------
-    TBD      BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
+   INFO-CODE   Name             Purpose                       Reference
+  ----------- ---------------- ----------------------------- -----------
+   TBD         BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
 
 12.  Acknowledgements
 
@@ -837,19 +837,15 @@ Internet-Draft                    codcp                        July 2022
 
 
 
-Homburg                  Expires 12 January 2023               [Page 15]
+Homburg                    Expires 8 June 2023                 [Page 15]
 
-Internet-Draft                    codcp                        July 2022
+Internet-Draft                    codcp                    December 2022
 
 
    [RFC6891]  Damas, J., Graff, M., and P. Vixie, "Extension Mechanisms
               for DNS (EDNS(0))", STD 75, RFC 6891,
               DOI 10.17487/RFC6891, April 2013,
               <https://www.rfc-editor.org/info/rfc6891>.
-
-   [RFC7120]  Cotton, M., "Early IANA Allocation of Standards Track Code
-              Points", BCP 100, RFC 7120, DOI 10.17487/RFC7120, January
-              2014, <https://www.rfc-editor.org/info/rfc7120>.
 
    [RFC7540]  Belshe, M., Peon, R., and M. Thomson, Ed., "Hypertext
               Transfer Protocol Version 2 (HTTP/2)", RFC 7540,
@@ -878,7 +874,6 @@ Internet-Draft                    codcp                        July 2022
 Author's Address
 
    Philip Homburg
-
    Email: philip@nlnetlabs.nl
 
 
@@ -893,4 +888,9 @@ Author's Address
 
 
 
-Homburg                  Expires 12 January 2023               [Page 16]
+
+
+
+
+
+Homburg                    Expires 8 June 2023                 [Page 16]

@@ -604,12 +604,11 @@ return the BADPROXYPOLICY error.</t>
  TBD     PROXY SCOPE    Standard   RFC xxxx
  TBD     TRUST ANCHOR   Standard   RFC xxxx
 </artwork>
-<t>IANA has assigned the following DNS response code as an early allocation
-  per <xref target="RFC7120"></xref>:</t>
+<t>IANA has assigned the following Extended DNS Error code:</t>
 
-<artwork> RCODE    Name             Description                   Reference
--------- ---------------- ----------------------------- -----------
- TBD      BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
+<artwork> INFO-CODE   Name             Purpose                       Reference
+----------- ---------------- ----------------------------- -----------
+ TBD         BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
 </artwork>
 </section>
 
@@ -632,7 +631,6 @@ return the BADPROXYPOLICY error.</t>
 <xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.5280.xml"/>
 <xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.5625.xml"/>
 <xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.6891.xml"/>
-<xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.7120.xml"/>
 <xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.7540.xml"/>
 <xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.7858.xml"/>
 <xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.7958.xml"/>

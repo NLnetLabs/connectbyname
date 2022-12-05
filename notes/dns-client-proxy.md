@@ -659,12 +659,11 @@ IANA has assigned the following DNS EDNS0 option codes:
      TBD     PROXY SCOPE    Standard   RFC xxxx
      TBD     TRUST ANCHOR   Standard   RFC xxxx
 
-  IANA has assigned the following DNS response code as an early allocation
-  per [@RFC7120]:
+  IANA has assigned the following Extended DNS Error code:
 
-     RCODE    Name             Description                   Reference
-    -------- ---------------- ----------------------------- -----------
-     TBD      BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
+     INFO-CODE   Name             Purpose                       Reference
+    ----------- ---------------- ----------------------------- -----------
+     TBD         BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
 
 # Acknowledgements
 
