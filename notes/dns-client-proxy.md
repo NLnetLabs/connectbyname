@@ -2,12 +2,12 @@
 title = "Control Options For DNS Client Proxies"
 abbrev = "codcp"
 area = "Internet"
-workgroup = "ADD"
+workgroup = "DNSOP"
 
 [seriesInfo]
 status = "standard"
 name = "Internet-Draft"
-value = "draft-homburg-add-codcp-00"
+value = "draft-homburg-dnsop-codcp-00"
 stream = "IETF"
 
 date = 2022-07-11T00:00:00Z
@@ -180,25 +180,7 @@ in a PROXY CONTROL Option or the option is malformed.
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
    2: |                         OPTION-LENGTH                         |
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   4: | U |UA | A | P | D |DD |                     Z                 |
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   6: |A53|D53|AT |DT |AH2|DH2|AH3|DH3|AQ |DQ |         Z             |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   8: |         Addr Type             |         Addr Length           |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
-      ~                IPv4 or IPv6-address(es)                       ~
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-      |  Domain Name Length           |                               |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
-      ~                   Domain Name                                 ~
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |          SvcParams Length     |                               |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
-      ~                 SvcParams                                     ~
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |     Interface Name Length     |                               |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
-      ~                 Interface Name                                ~
+   4: ~                 Type-Length-Value (TLV) Options               ~
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ~~~
 
@@ -212,6 +194,58 @@ OPTION-CODE
 OPTION-LENGTH
 
 : Length of this option excluding the OPTION-CODE and OPTION-LENGTH fields
+
+The remainer is filled with a collection of TLV sub-options defined next.
+All sub-options have the following format:
+
+~~~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                      SUB-OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                     SUB-OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: ~                      Sub-Option Data                          ~
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~
+
+where
+
+{newline="true"}
+SUB-OPTION-CODE
+
+: To be decided
+
+SUB-OPTION-LENGTH
+
+: Length of this sub-option excluding the SUB-OPTION-CODE and
+  SUB-OPTION-LENGTH fields
+
+Sub-Option Data
+
+: Sub-option specific data
+
+## Security Flags Sub-option
+
+~~~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                      SUB-OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                     SUB-OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: | U |UA | A | P | D |                         Z                 |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+~~~
+
+where
+
+{newline="true"}
+SUB-OPTION-CODE
+
+: To be decided
+
+SUB-OPTION-LENGTH
+
+: 2 (this option defines a 16-bit flags field
 
 U
 
@@ -233,60 +267,132 @@ D
 
 : authenticate using DANE
 
-DD
-
-: by default disallow other transports
-(transports that are not explicitly listed)
-
-A53,AT,AH2,AH3,AQ
-
-: allow respectively Do53, DoT, DoH H2, DoH H3, DoQ
-
-D53,DT,DH2,DH3,DQ
-
-: disallow respectively Do53, DoT, DoH H2, DoH H3, DoQ
-
 Z
 
 : reserved, MUST be zero when sending, MUST be ignored when received
 
-Addr Type
+## Transport Priority Sub-option
 
-: Type of addresses, The value 0 if no addresses are included, the value 1 for
-IPv4, and the value 2 for IPv6.
+~~~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                      SUB-OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                     SUB-OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: | TRANSPORT PROTOCOL            |        PRIORITY               |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+~~~
 
-Addr Length
+where
 
-: length of the addresses in octets. Must be a multiple of 4 for IPv4 and
-a multiple of 16 for IPv6. This field can be zero if no addresses are
-specified.
+{newline="true"}
+SUB-OPTION-CODE
 
-IPv4 or IPv6-address(es)
+: To be decided
 
-: list of IPv4 or IPv6 addresses
+SUB-OPTION-LENGTH
 
-Domain Name Length
+: 2
 
-: length of Domain Name. Zero if there is no Domain Name
+TRANSPORT PROTOCOL
 
-Domain Name
+: A DNS transport protocol idenfier. The value 0 is used to specify any
+  transport implemented by server.
+
+PRIORITY
+
+: The priority of this transport relative to other transports. The value 0
+  indicates the highest priority and 254 the lowest. The value 255 is
+  reserved to mean that this protocol MUST NOT be used.
+
+## Domain Name
+
+~~~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                      SUB-OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                     SUB-OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: ~                        DOMAIN NAME                            ~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+~~~
+
+where
+
+{newline="true"}
+SUB-OPTION-CODE
+
+: To be decided
+
+SUB-OPTION-LENGTH
+
+: Length of this sub-option excluding the SUB-OPTION-CODE and
+  SUB-OPTION-LENGTH fields
+
+DOMAIN NAME
 
 : domain name for authentication or resolving IP addresses. The domain name
 is encoded in uncompressed DNS wire format.
 
-SvcParams Length
+## SVC Parameter
 
-: length of SvcParams. Zero if there are no service parameters specified.
+~~~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                      SUB-OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                     SUB-OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: |                       SVCPARAM KEY                            |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   6: ~                         SVCPARAM                              ~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+~~~
 
-SvcParams
+where
 
-: Service parameters
+{newline="true"}
+SUB-OPTION-CODE
 
-Interface Name Length
+: To be decided
 
-: length of Interface Name. Zero if no interface is specified.
+SUB-OPTION-LENGTH
 
-Interface Name
+: Length of this sub-option excluding the SUB-OPTION-CODE and
+  SUB-OPTION-LENGTH fields
+
+SVCPARAM KEY
+
+: Key of Svc parameters as defined in [ref]
+
+SvcParam
+
+: Svc parameter value
+
+## Interface Name
+
+~~~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                      SUB-OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                     SUB-OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: ~                      INTERFACE NAME                           ~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+~~~
+
+where
+
+{newline="true"}
+SUB-OPTION-CODE
+
+: To be decided
+
+SUB-OPTION-LENGTH
+
+: Length of this sub-option excluding the SUB-OPTION-CODE and
+  SUB-OPTION-LENGTH fields
+
+INTERFACE NAME
 
 : name of outgoing interface for transport connections
 
@@ -670,3 +776,16 @@ IANA has assigned the following DNS EDNS0 option codes:
 Many thanks to Yorgos Thessalonikefs and Willem Toorop for their feedback.
 
 {backmatter}
+
+# Change history
+
+(This section to be removed by the RFC editor.)
+
+* draft-homburg-dnsop-codcp-00
+
+  - Renamed to draft-homburg-dnsop-codcp
+  - IANA section with allocated code points
+
+* draft-homburg-add-codcp-00
+
+  - Initial version

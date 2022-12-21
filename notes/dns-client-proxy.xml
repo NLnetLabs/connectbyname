@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- name="GENERATOR" content="github.com/mmarkdown/mmark Mmark Markdown Processor - mmark.miek.nl" -->
-<rfc version="3" ipr="trust200902" docName="draft-homburg-add-codcp-00" submissionType="IETF" category="std" xml:lang="en" xmlns:xi="http://www.w3.org/2001/XInclude" indexInclude="true" consensus="true">
+<rfc version="3" ipr="trust200902" docName="draft-homburg-dnsop-codcp-00" submissionType="IETF" category="std" xml:lang="en" xmlns:xi="http://www.w3.org/2001/XInclude" indexInclude="true" consensus="true">
 
 <front>
-<title abbrev="codcp">Control Options For DNS Client Proxies</title><seriesInfo value="draft-homburg-add-codcp-00" stream="IETF" status="standard" name="Internet-Draft"></seriesInfo>
+<title abbrev="codcp">Control Options For DNS Client Proxies</title><seriesInfo value="draft-homburg-dnsop-codcp-00" stream="IETF" status="standard" name="Internet-Draft"></seriesInfo>
 <author initials="P.C." surname="Homburg" fullname="Philip Homburg"><organization></organization><address><postal><street></street>
 </postal><email>philip@nlnetlabs.nl</email>
 </address></author><date/>
 <area>Internet</area>
-<workgroup>ADD</workgroup>
+<workgroup>DNSOP</workgroup>
 
 <abstract>
 <t>The introduction of many new transport protocols for DNS in recent years
@@ -151,25 +151,7 @@ in a PROXY CONTROL Option or the option is malformed.</t>
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
    2: |                         OPTION-LENGTH                         |
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   4: | U |UA | A | P | D |DD |                     Z                 |
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   6: |A53|D53|AT |DT |AH2|DH2|AH3|DH3|AQ |DQ |         Z             |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   8: |         Addr Type             |         Addr Length           |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
-      ~                IPv4 or IPv6-address(es)                       ~
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-      |  Domain Name Length           |                               |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
-      ~                   Domain Name                                 ~
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |          SvcParams Length     |                               |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
-      ~                 SvcParams                                     ~
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-      |     Interface Name Length     |                               |
-      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               |
-      ~                 Interface Name                                ~
+   4: ~                 Type-Length-Value (TLV) Options               ~
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </artwork>
 <t>where</t>
@@ -180,6 +162,52 @@ in a PROXY CONTROL Option or the option is malformed.</t>
 </dd>
 <dt>OPTION-LENGTH</dt>
 <dd><t>Length of this option excluding the OPTION-CODE and OPTION-LENGTH fields</t>
+</dd>
+</dl>
+<t>The remainer is filled with a collection of TLV sub-options defined next.
+All sub-options have the following format:</t>
+
+<artwork>      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                      SUB-OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                     SUB-OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: ~                      Sub-Option Data                          ~
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</artwork>
+<t>where</t>
+
+<dl newline="true">
+<dt>SUB-OPTION-CODE</dt>
+<dd><t>To be decided</t>
+</dd>
+<dt>SUB-OPTION-LENGTH</dt>
+<dd><t>Length of this sub-option excluding the SUB-OPTION-CODE and
+SUB-OPTION-LENGTH fields</t>
+</dd>
+<dt>Sub-Option Data</dt>
+<dd><t>Sub-option specific data</t>
+</dd>
+</dl>
+
+<section anchor="security-flags-sub-option"><name>Security Flags Sub-option</name>
+
+<artwork>      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                      SUB-OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                     SUB-OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: | U |UA | A | P | D |                         Z                 |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+</artwork>
+<t>where</t>
+
+<dl newline="true">
+<dt>SUB-OPTION-CODE</dt>
+<dd><t>To be decided</t>
+</dd>
+<dt>SUB-OPTION-LENGTH</dt>
+<dd><t>2 (this option defines a 16-bit flags field</t>
 </dd>
 <dt>U</dt>
 <dd><t>force the use of unencrypted communication (Do53)</t>
@@ -196,48 +224,122 @@ in a PROXY CONTROL Option or the option is malformed.</t>
 <dt>D</dt>
 <dd><t>authenticate using DANE</t>
 </dd>
-<dt>DD</dt>
-<dd><t>by default disallow other transports
-(transports that are not explicitly listed)</t>
-</dd>
-<dt>A53,AT,AH2,AH3,AQ</dt>
-<dd><t>allow respectively Do53, DoT, DoH H2, DoH H3, DoQ</t>
-</dd>
-<dt>D53,DT,DH2,DH3,DQ</dt>
-<dd><t>disallow respectively Do53, DoT, DoH H2, DoH H3, DoQ</t>
-</dd>
 <dt>Z</dt>
 <dd><t>reserved, MUST be zero when sending, MUST be ignored when received</t>
 </dd>
-<dt>Addr Type</dt>
-<dd><t>Type of addresses, The value 0 if no addresses are included, the value 1 for
-IPv4, and the value 2 for IPv6.</t>
+</dl>
+</section>
+
+<section anchor="transport-priority-sub-option"><name>Transport Priority Sub-option</name>
+
+<artwork>      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                      SUB-OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                     SUB-OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: | TRANSPORT PROTOCOL            |        PRIORITY               |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+</artwork>
+<t>where</t>
+
+<dl newline="true">
+<dt>SUB-OPTION-CODE</dt>
+<dd><t>To be decided</t>
 </dd>
-<dt>Addr Length</dt>
-<dd><t>length of the addresses in octets. Must be a multiple of 4 for IPv4 and
-a multiple of 16 for IPv6. This field can be zero if no addresses are
-specified.</t>
+<dt>SUB-OPTION-LENGTH</dt>
+<dd><t>2</t>
 </dd>
-<dt>IPv4 or IPv6-address(es)</dt>
-<dd><t>list of IPv4 or IPv6 addresses</t>
+<dt>TRANSPORT PROTOCOL</dt>
+<dd><t>A DNS transport protocol idenfier. The value 0 is used to specify any
+transport implemented by server.</t>
 </dd>
-<dt>Domain Name Length</dt>
-<dd><t>length of Domain Name. Zero if there is no Domain Name</t>
+<dt>PRIORITY</dt>
+<dd><t>The priority of this transport relative to other transports. The value 0
+indicates the highest priority and 254 the lowest. The value 255 is
+reserved to mean that this protocol MUST NOT be used.</t>
 </dd>
-<dt>Domain Name</dt>
+</dl>
+</section>
+
+<section anchor="domain-name"><name>Domain Name</name>
+
+<artwork>      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                      SUB-OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                     SUB-OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: ~                        DOMAIN NAME                            ~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+</artwork>
+<t>where</t>
+
+<dl newline="true">
+<dt>SUB-OPTION-CODE</dt>
+<dd><t>To be decided</t>
+</dd>
+<dt>SUB-OPTION-LENGTH</dt>
+<dd><t>Length of this sub-option excluding the SUB-OPTION-CODE and
+SUB-OPTION-LENGTH fields</t>
+</dd>
+<dt>DOMAIN NAME</dt>
 <dd><t>domain name for authentication or resolving IP addresses. The domain name
 is encoded in uncompressed DNS wire format.</t>
 </dd>
-<dt>SvcParams Length</dt>
-<dd><t>length of SvcParams. Zero if there are no service parameters specified.</t>
+</dl>
+</section>
+
+<section anchor="svc-parameter"><name>SVC Parameter</name>
+
+<artwork>      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                      SUB-OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                     SUB-OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: |                       SVCPARAM KEY                            |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   6: ~                         SVCPARAM                              ~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+</artwork>
+<t>where</t>
+
+<dl newline="true">
+<dt>SUB-OPTION-CODE</dt>
+<dd><t>To be decided</t>
 </dd>
-<dt>SvcParams</dt>
-<dd><t>Service parameters</t>
+<dt>SUB-OPTION-LENGTH</dt>
+<dd><t>Length of this sub-option excluding the SUB-OPTION-CODE and
+SUB-OPTION-LENGTH fields</t>
 </dd>
-<dt>Interface Name Length</dt>
-<dd><t>length of Interface Name. Zero if no interface is specified.</t>
+<dt>SVCPARAM KEY</dt>
+<dd><t>Key of Svc parameters as defined in [ref]</t>
 </dd>
-<dt>Interface Name</dt>
+<dt>SvcParam</dt>
+<dd><t>Svc parameter value</t>
+</dd>
+</dl>
+</section>
+
+<section anchor="interface-name"><name>Interface Name</name>
+
+<artwork>      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                      SUB-OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                     SUB-OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: ~                      INTERFACE NAME                           ~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+</artwork>
+<t>where</t>
+
+<dl newline="true">
+<dt>SUB-OPTION-CODE</dt>
+<dd><t>To be decided</t>
+</dd>
+<dt>SUB-OPTION-LENGTH</dt>
+<dd><t>Length of this sub-option excluding the SUB-OPTION-CODE and
+SUB-OPTION-LENGTH fields</t>
+</dd>
+<dt>INTERFACE NAME</dt>
 <dd><t>name of outgoing interface for transport connections</t>
 </dd>
 </dl>
@@ -374,6 +476,7 @@ option is malformed, it returns this error.</t>
 a PROXY CONTROL Option that lists what the proxy can do. For example,
 if authenticated encryption is not possible, but unauthenticated is,
 then the proxy may include an option that has the UA bit set.</t>
+</section>
 </section>
 
 <section anchor="proxy-scope-option"><name>PROXY SCOPE OPTION</name>
@@ -637,6 +740,24 @@ return the BADPROXYPOLICY error.</t>
 <xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.8484.xml"/>
 <xi:include href="https://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.9000.xml"/>
 </references>
+
+<section anchor="change-history"><name>Change history</name>
+<t>(This section to be removed by the RFC editor.)</t>
+
+<ul>
+<li><t>draft-homburg-dnsop-codcp-00</t>
+
+<ul spacing="compact">
+<li>Renamed to draft-homburg-dnsop-codcp</li>
+<li>IANA section with allocated code points</li>
+</ul></li>
+<li><t>draft-homburg-add-codcp-00</t>
+
+<ul spacing="compact">
+<li>Initial version</li>
+</ul></li>
+</ul>
+</section>
 
 </back>
 
