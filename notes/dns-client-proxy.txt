@@ -3,9 +3,9 @@
 
 
 DNSOP                                                       P.C. Homburg
-Internet-Draft                                          21 December 2022
+Internet-Draft                                          23 December 2022
 Intended status: Standards Track                                        
-Expires: 24 June 2023
+Expires: 26 June 2023
 
 
                  Control Options For DNS Client Proxies
@@ -40,7 +40,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 24 June 2023.
+   This Internet-Draft will expire on 26 June 2023.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Homburg                   Expires 24 June 2023                  [Page 1]
+Homburg                   Expires 26 June 2023                  [Page 1]
 
 Internet-Draft                    codcp                    December 2022
 
@@ -71,11 +71,11 @@ Table of Contents
    3.  Key Words . . . . . . . . . . . . . . . . . . . . . . . . . .   4
    4.  Description . . . . . . . . . . . . . . . . . . . . . . . . .   5
    5.  PROXY CONTROL OPTION  . . . . . . . . . . . . . . . . . . . .   5
-     5.1.  Security Flags Sub-option . . . . . . . . . . . . . . . .   6
-     5.2.  Transport Priority Sub-option . . . . . . . . . . . . . .   6
-     5.3.  Domain Name . . . . . . . . . . . . . . . . . . . . . . .   7
-     5.4.  SVC Parameter . . . . . . . . . . . . . . . . . . . . . .   8
-     5.5.  Interface Name  . . . . . . . . . . . . . . . . . . . . .   8
+     5.1.  Security Constraints Sub-option . . . . . . . . . . . . .   6
+     5.2.  Transport Priority Sub-option . . . . . . . . . . . . . .   8
+     5.3.  Domain Name . . . . . . . . . . . . . . . . . . . . . . .   9
+     5.4.  SVC Parameter . . . . . . . . . . . . . . . . . . . . . .  10
+     5.5.  Interface Name  . . . . . . . . . . . . . . . . . . . . .  11
    6.  PROXY SCOPE OPTION  . . . . . . . . . . . . . . . . . . . . .  11
    7.  TRUST ANCHOR OPTION . . . . . . . . . . . . . . . . . . . . .  12
    8.  Protocol Specification  . . . . . . . . . . . . . . . . . . .  13
@@ -84,7 +84,7 @@ Table of Contents
        8.1.2.  Trust Anchor  . . . . . . . . . . . . . . . . . . . .  14
      8.2.  Server Processing . . . . . . . . . . . . . . . . . . . .  14
    9.  Connection Between Stub Resolver And Proxy  . . . . . . . . .  15
-   10. Security Considerations . . . . . . . . . . . . . . . . . . .  15
+   10. Security Considerations . . . . . . . . . . . . . . . . . . .  16
    11. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  16
    12. Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  16
    13. Normative References  . . . . . . . . . . . . . . . . . . . .  16
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Homburg                   Expires 24 June 2023                  [Page 2]
+Homburg                   Expires 26 June 2023                  [Page 2]
 
 Internet-Draft                    codcp                    December 2022
 
@@ -165,7 +165,7 @@ Internet-Draft                    codcp                    December 2022
 
 
 
-Homburg                   Expires 24 June 2023                  [Page 3]
+Homburg                   Expires 26 June 2023                  [Page 3]
 
 Internet-Draft                    codcp                    December 2022
 
@@ -221,7 +221,7 @@ Internet-Draft                    codcp                    December 2022
 
 
 
-Homburg                   Expires 24 June 2023                  [Page 4]
+Homburg                   Expires 26 June 2023                  [Page 4]
 
 Internet-Draft                    codcp                    December 2022
 
@@ -250,7 +250,7 @@ Internet-Draft                    codcp                    December 2022
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     2: |                         OPTION-LENGTH                         |
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-    4: ~                 Type-Length-Value (TLV) Options               ~
+    4: ~              Type-Length-Value (TLV) Sub-Options              ~
        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
    where
@@ -277,7 +277,7 @@ Internet-Draft                    codcp                    December 2022
 
 
 
-Homburg                   Expires 24 June 2023                  [Page 5]
+Homburg                   Expires 26 June 2023                  [Page 5]
 
 Internet-Draft                    codcp                    December 2022
 
@@ -292,14 +292,23 @@ Internet-Draft                    codcp                    December 2022
    Sub-Option Data
       Sub-option specific data
 
-5.1.  Security Flags Sub-option
+   Associated with this option is a new error, BADPROXYPOLICY.  When a
+   proxy cannot meet the requirements in a PROXY CONTROL Option or the
+   option is malformed, it returns this error.
+
+   If the proxy returns a BADPROXYPOLICY error, the proxy MAY include a
+   PROXY CONTROL Option that lists what the proxy can do.  For example,
+   if authenticated encryption is not possible, but unauthenticated is,
+   then the proxy may include an option that has the UA bit set.
+
+5.1.  Security Constraints Sub-option
 
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     0: |                      SUB-OPTION-CODE                          |
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     2: |                     SUB-OPTION-LENGTH                         |
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-    4: | U |UA | A | P | D |                         Z                 |
+    4: | U |UA | A | P | D |                     Z                     |
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
 
    where
@@ -308,13 +317,13 @@ Internet-Draft                    codcp                    December 2022
       To be decided
 
    SUB-OPTION-LENGTH
-      2 (this option defines a 16-bit flags field
+      2 (this sub-option defines a 16-bit flags field
 
    U 
       force the use of unencrypted communication (Do53)
 
    UA
-      require unauthenticated encryption
+      require encryption, authentication is allowed but not required
 
    A 
       require authenticated encryption
@@ -322,21 +331,86 @@ Internet-Draft                    codcp                    December 2022
    P 
       authenticate using a PKIX certificate
 
+
+
+Homburg                   Expires 26 June 2023                  [Page 6]
+
+Internet-Draft                    codcp                    December 2022
+
+
    D 
       authenticate using DANE
 
    Z 
       reserved, MUST be zero when sending, MUST be ignored when received
 
-5.2.  Transport Priority Sub-option
+   This sub-option gives the security contraints of the DNS transports
+   that are used by the client proxy.  The U, UA, and A flags are
+   mutually exclusive.  If more than one flag is set, the proxy SHOULD
+   return a BADPROXYPOLICY error.  There are four possibilities:
+
+   U = 0, UA = 0, A = 0  An effort is made to reach authenticated
+      encryption, if that fails, unauthenticated encryption is tried.
+      If that also fails, the proxy resorts to an unencrypted transport.
+      It is an error if either or both of the P or D flags is set and
+      the proxy SHOULD return a BADPROXYPOLICY error if that is the
+      case.
+
+   U = 1, UA = 0, A = 0  The proxy tries only unencrypted transports.
+      It is an error if either or both of the P or D flags is set and
+      the proxy SHOULD return a BADPROXYPOLICY error if that is the
+      case.
+
+   U = 0, UA = 1, A = 0  An effort is made to reach authenticated
+      encryption, if that fails, unauthenticated encryption is tried.
+      It is an error if either or both of the P or D flags is set and
+      the proxy SHOULD return a BADPROXYPOLICY error if that is the
+      case.
+
+   U = 0, UA = 0, A = 1  The proxy only tries authenticated encryption.
+      The P and D flags can be used to control which authentication
+      mechanism has to be used.
+
+   The P and D flags allow the application to require a specific
+   authentication mechanism (PKIX or DANE).  The meaning of the flags is
+   the following:
+
+   P = 0, D = 0  At least one of the two mechanisms has to validate for
+      authenticated encryption to succeed.
+
+   P = 1, D = 0  PKIX validation has to succeed, the status of DANE
+      validation is ignored.
+
+   P = 0, D = 1  A DANE record has to be present and be DNSSEC valid.  A
 
 
 
 
-Homburg                   Expires 24 June 2023                  [Page 6]
+
+
+
+Homburg                   Expires 26 June 2023                  [Page 7]
 
 Internet-Draft                    codcp                    December 2022
 
+
+      DANE record has a Certificate Usage Field.  For some values of
+      this field (the values zero and one), DANE requires PKIX
+      validation.  In those cases, PKIX validation is also required
+      according to the DANE specifications.  For the values two and
+      three, DANE does not require PKIX and because the P flag is zero,
+      the result of PKIX validation has to be ignored.
+
+   P = 1, D = 1  Both PKIX and DANE are required together.  For PKIX,
+      this means that PKIX validation has to succeed.  For DANE it means
+      that a DANE record has to be present and be DNSSEC valid.
+      Validation using the DANE record has to succeed.
+
+   Note that these two flags can only be used in combination with the A
+   flag.  The proxy SHOULD return a BADPROXYPOLICY error if either or
+   both of the P or D flags is set and the A flag is clear.
+
+5.2.  Transport Priority Sub-option
 
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     0: |                      SUB-OPTION-CODE                          |
@@ -361,7 +435,41 @@ Internet-Draft                    codcp                    December 2022
    PRIORITY
       The priority of this transport relative to other transports.  The
       value 0 indicates the highest priority and 254 the lowest.  The
-      value 255 is reserved to mean that this protocol MUST NOT be used.
+      value 255 is defined to mean that this protocol MUST NOT be used.
+
+   A new registry is need for transport protocols.  Initial values:
+
+   0  a default list of transports built into the proxy
+
+   1  unencrypted UDP , fallback to unencrypted TCP if the TC bit is set
+
+
+
+Homburg                   Expires 26 June 2023                  [Page 8]
+
+Internet-Draft                    codcp                    December 2022
+
+
+      in the reply
+
+   2  unencrypted without fallback
+
+   3  unencrypted TCP
+
+   4  DNS over TCP and TLS
+
+   5  DNS over HTTPS
+
+   6  DNS over QUIC
+
+   Priorities are take over all Proxy Control options in a DNS request.
+   This allows the application to specify an explicit order (or the lack
+   of order) among different upstream resolvers.
+
+   For protocol 0 (the default list), all protocols that are explicitly
+   listed in a Proxy Control option are excluded from the default list.
+   In other words, when processing the default list, all explicitly
+   listed protocols are excluded.
 
 5.3.  Domain Name
 
@@ -386,13 +494,24 @@ Internet-Draft                    codcp                    December 2022
       domain name for authentication or resolving IP addresses.  The
       domain name is encoded in uncompressed DNS wire format.
 
+   If the option contains a domain name but no IP addresses (see
+   ipv4hints and ipv6hints below) then the proxy is expected to resolve
+   the name to addresses.  If only addresses are specified then the
+   proxy assumes that no name is known (though a PKIX certificate may
 
 
 
-Homburg                   Expires 24 June 2023                  [Page 7]
+Homburg                   Expires 26 June 2023                  [Page 9]
 
 Internet-Draft                    codcp                    December 2022
 
+
+   include an address literal in the subjectAltName).  If both a name
+   and address are specified then the proxy will use the specified
+   address and use the name for authentication.
+
+   The the option contains neither a domain name nor any IP addresses
+   then the application requests the resolvers known to the proxy.
 
 5.4.  SVC Parameter
 
@@ -421,6 +540,28 @@ Internet-Draft                    codcp                    December 2022
    SvcParam
       Svc parameter value
 
+   This document take the meaning of SvcParamKeys 'alpn', 'port', and
+   'dohpath' from [draft-ietf-add-svcb-dns] with the exception that
+   'alpn' does not have to be present (i.e., the 'MUST be present'
+   requirement does not apply)
+
+   Other relevant SvcParamKeys from [draft-ietf-dnsop-svcb-https] are
+   'mandatory', 'ech', 'ipv4hint' and 'ipv6hint'.
+
+   Instead of defining new sub-options to store IPv4 and IPv6 address,
+   this document re-uses the ipv4hints and ipv6hints.  However the
+   semantics are redefined to be that these option and not hints, be are
+   the actual addresses that are to be used.
+
+
+
+
+
+Homburg                   Expires 26 June 2023                 [Page 10]
+
+Internet-Draft                    codcp                    December 2022
+
+
 5.5.  Interface Name
 
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
@@ -443,130 +584,6 @@ Internet-Draft                    codcp                    December 2022
    INTERFACE NAME
       name of outgoing interface for transport connections
 
-
-
-Homburg                   Expires 24 June 2023                  [Page 8]
-
-Internet-Draft                    codcp                    December 2022
-
-
-   This option is designed to give control over what level of detail it
-   wants to specify.  The first 5 flags (U, UA, A, P, and D) give
-   general requirements for properties of DNS transports that are used
-   by the client proxy.  The U, UA, and A flags are mutually exclusive.
-   If more than one flag is set, the proxy SHOULD return a
-   BADPROXYPOLICY error.  There are four possibilities:
-
-   U = 0, UA = 0, A = 0  An effort is made to reach authenticated
-      encryption, if that fails, unauthenticated encryption is tried.
-      If that also fails, the proxy resorts to an unencrypted transport.
-      It is an error if either or both of the P or D flags is set and
-      the proxy SHOULD return a BADPROXYPOLICY error.
-
-   U = 1, UA = 0, A = 0  The proxy only tries only unencrypted
-      transports.  It is an error if either or both of the P or D flags
-      is set and the proxy SHOULD return a BADPROXYPOLICY error.
-
-   U = 0, UA = 1, A = 0  An effort is made to reach authenticated
-      encryption, if that fails, unauthenticated encryption is tried.
-      It is an error if either or both of the P or D flags is set and
-      the proxy SHOULD return a BADPROXYPOLICY error.
-
-   U = 0, UA = 0, A = 1  The proxy only tries authenticated encryption.
-      The P and D flags can be set to control which authentication
-      mechanism has to be used.
-
-   The P and D flags allow the application to require a specific
-   authentication mechanism (PKIX or DANE).  The meaning of the flags is
-   the following:
-
-   P = 0, D = 0  At least one of the two mechanisms has to validate for
-      authenticated encryption to succeed.
-
-   P = 1, D = 0  PKIX validation has to succeed, the status of DANE
-      validation is ignored.
-
-   P = 0, D = 1  A DANE record has to be present and be DNSSEC valid.  A
-      DANE record has a Certificate Usage Field.  For some values of
-      this field (the values zero and one), DANE requires PKIX
-      validation.  In those cases, PKIX validation is also required
-      according to the DANE specifications.  For the values two and
-      three, DANE does not require PKIX and because the P flag is zero,
-      the result of PKIX validation has to be ignored.
-
-   P = 1, D = 1  Both PKIX and DANE are required together.  For PKIX,
-      this means that PKIX validation has to succeed.  For DANE it means
-      that a DANE record has to be present and be DNSSEC valid.
-      Validation using the DANE record has to succeed.
-
-
-
-Homburg                   Expires 24 June 2023                  [Page 9]
-
-Internet-Draft                    codcp                    December 2022
-
-
-   Note that these two flags can only be used in combination with the A
-   flag.  The proxy SHOULD return a BADPROXYPOLICY error if either or
-   both of the P or D flags is set and the A flag is clear.
-
-   The next flags provide more detailed control over which transports
-   should be used or not.  For each of 5 different transports (Do53,
-   DoT, DoH with ALPN h2, DoH with ALPN h3, DoQ) there is a flag to
-   allow (A53,AT,AH2,AH3,AQ) or disallow (D53,DT,DH2,DH3,DQ) the use of
-   the transport.  There is space to add more transports later.  Note
-   that setting the A flag and the D flag for a protocol (for example,
-   setting both the A53 and the D53 flags) is not allowed and a proxy
-   SHOULD reject such a request.
-
-   To future proof applications, there is a single flag DD, that by
-   default disallows transports that are not explicitly listed.  With
-   this flag clear, the application allows all transports that are not
-   explicitly disallowed (including future transports).  With the flag
-   set, the application has to explicitly list which transports can be
-   used.  For example, by setting only DD and AT, the application forces
-   the use of DoT.
-
-   When DD = 0:
-
-   *  all transports are in the pool of potentially usable transports
-   *  D53, DT, DH2, DH3 and DQ remove those transports from the pool.
-   *  The values of A53, AT, AH2, AH3 and AQ are irrelevant
-
-   When DD = 1:
-
-   *  no transports are in the pool of potentially usable transports
-   *  A53, AT, AH2, AH3 and AQ add those transports to the pool
-   *  The values of D53, DT, DH2, DH3 and DQ are irrelevant
-
-   Finally, an application can specify its own resolvers or rely on the
-   resolvers that are known to the proxy.  If ADN Length and Addr Length
-   are both zero, then the application requests the resolvers known to
-   the proxy.  [Note: it is unclear at the moment what to do with any
-   Service Parameters]
-
-   If the application specifies only an authentication-domain-name then
-   the proxy is expected to resolve the name to addresses.  If only
-   addresses are specified then the proxy assumes that no name is known
-   (though a PKIX certificate may include an address literal in the
-   subjectAltName).  If both a name and address are specified then the
-   proxy will use the specified address and use the name for
-   authentication.
-
-
-
-
-
-Homburg                   Expires 24 June 2023                 [Page 10]
-
-Internet-Draft                    codcp                    December 2022
-
-
-   To simplify the encoding of the option, an option with addresses will
-   have either IPv4 or IPv6 addresses.  If the application wants to
-   specify both IPv4 and IPv6 addresses for a certain authentication-
-   domain-name then it has to include two options.
-
    An application may want to specify a DNS resolver that is reachable
    through an IPv6 link-local address.  IPv6 link-local addresses are
    special in that they require a zone to be specified, either
@@ -579,21 +596,6 @@ Internet-Draft                    codcp                    December 2022
    then the zone identifier for the link-local address can be specified
    in the Interface field.  For this purpose an interface name can also
    be an interface index expressed as a decimal string.
-
-   When present, Service Parameters specify how to connect.  Otherwise
-   it is up to the proxy to try various possibilities.  For Service
-   Parameters, the values of the ipv4hint and ipv6hint fields are
-   ignored.  Addresses can only be specified using the addresses field
-   in the PROXY CONTROL Option.
-
-   Associated with this option is a new error, BADPROXYPOLICY.  When a
-   proxy cannot meet the requirements in a PROXY CONTROL Option or the
-   option is malformed, it returns this error.
-
-   If the proxy returns a BADPROXYPOLICY error, the proxy MAY include a
-   PROXY CONTROL Option that lists what the proxy can do.  For example,
-   if authenticated encryption is not possible, but unauthenticated is,
-   then the proxy may include an option that has the UA bit set.
 
 6.  PROXY SCOPE OPTION
 
@@ -608,16 +610,15 @@ Internet-Draft                    codcp                    December 2022
    OPTION-CODE
       To be decided
 
-   OPTION-LENGTH
 
 
 
-
-Homburg                   Expires 24 June 2023                 [Page 11]
+Homburg                   Expires 26 June 2023                 [Page 11]
 
 Internet-Draft                    codcp                    December 2022
 
 
+   OPTION-LENGTH
       Length of this option excluding the OPTION-CODE and OPTION-LENGTH
       fields
 
@@ -665,14 +666,15 @@ Internet-Draft                    codcp                    December 2022
    where
 
    OPTION-CODE
-      To be decided
 
 
 
-Homburg                   Expires 24 June 2023                 [Page 12]
+Homburg                   Expires 26 June 2023                 [Page 12]
 
 Internet-Draft                    codcp                    December 2022
 
+
+      To be decided
 
    OPTION-LENGTH
       Length of this option excluding the OPTION-CODE and OPTION-LENGTH
@@ -719,17 +721,18 @@ Internet-Draft                    codcp                    December 2022
    first sends a probing query to verify that the proxy supports the
    PROXY CONTROL and PROXY SCOPE Options.
 
-   This request queries "resolver.arpa" for SOA records.  The proxy MUST
-   implement this as a Special Use Domain Name.  The actual response is
-   not important.  The important part is that the proxy returns PROXY
 
 
 
-Homburg                   Expires 24 June 2023                 [Page 13]
+
+Homburg                   Expires 26 June 2023                 [Page 13]
 
 Internet-Draft                    codcp                    December 2022
 
 
+   This request queries "resolver.arpa" for SOA records.  The proxy MUST
+   implement this as a Special Use Domain Name.  The actual response is
+   not important.  The important part is that the proxy returns PROXY
    CONTROL and PROXY SCOPE Options as described in this document or sets
    the response code to BADPROXYPOLICY if it cannot meet specified
    policy.
@@ -774,18 +777,19 @@ Internet-Draft                    codcp                    December 2022
    Proxies SHOULD respond to all queries with NODATA unless other
    behavior is specified in a different document.
 
-   If the proxy successfully connects to a recursive resolver and
-   receives a reply, or the query is for a special use domain name that
-   is handled internally in the proxy, then the proxy add a PROXY
-   CONTROL Options dat details the connection to the recursive resolver
 
 
 
-Homburg                   Expires 24 June 2023                 [Page 14]
+
+Homburg                   Expires 26 June 2023                 [Page 14]
 
 Internet-Draft                    codcp                    December 2022
 
 
+   If the proxy successfully connects to a recursive resolver and
+   receives a reply, or the query is for a special use domain name that
+   is handled internally in the proxy, then the proxy add a PROXY
+   CONTROL Options dat details the connection to the recursive resolver
    (i.e., the U, UA, or A flag depending on encryption and
    authentication, P and or D for authenticated connections, A53, AT,
    AH2, AH3, or AQ depending on the transport (or none of those for a
@@ -826,6 +830,18 @@ Internet-Draft                    codcp                    December 2022
    case the stub resolver MUST make sure that doing so does not violate
    the policy set by the application.
 
+
+
+
+
+
+
+
+Homburg                   Expires 26 June 2023                 [Page 15]
+
+Internet-Draft                    codcp                    December 2022
+
+
 10.  Security Considerations
 
    A privacy sensitive application SHOULD first issue a SOA query for
@@ -833,14 +849,6 @@ Internet-Draft                    codcp                    December 2022
    documented in the document.  If the proxy does not support this
    document then the application can refrain from sending queries that
    reveal privacy sensitive names.
-
-
-
-
-Homburg                   Expires 24 June 2023                 [Page 15]
-
-Internet-Draft                    codcp                    December 2022
-
 
    By setting the interface name, an application can select an outging
    interface on the proxy.  Proxies should make sure that a query
@@ -863,7 +871,7 @@ Internet-Draft                    codcp                    December 2022
 
    INFO-CODE   Name             Purpose                       Reference
   ----------- ---------------- ----------------------------- -----------
-   TBD         BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
+   28          BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
 
 12.  Acknowledgements
 
@@ -883,6 +891,13 @@ Internet-Draft                    codcp                    December 2022
 
 14.  Informative References
 
+
+
+Homburg                   Expires 26 June 2023                 [Page 16]
+
+Internet-Draft                    codcp                    December 2022
+
+
    [RFC1034]  Mockapetris, P., "Domain names - concepts and facilities",
               STD 13, RFC 1034, DOI 10.17487/RFC1034, November 1987,
               <https://www.rfc-editor.org/info/rfc1034>.
@@ -890,13 +905,6 @@ Internet-Draft                    codcp                    December 2022
    [RFC1035]  Mockapetris, P., "Domain names - implementation and
               specification", STD 13, RFC 1035, DOI 10.17487/RFC1035,
               November 1987, <https://www.rfc-editor.org/info/rfc1035>.
-
-
-
-Homburg                   Expires 24 June 2023                 [Page 16]
-
-Internet-Draft                    codcp                    December 2022
-
 
    [RFC3493]  Gilligan, R., Thomson, S., Bound, J., McCann, J., and W.
               Stevens, "Basic Socket Interface Extensions for IPv6",
@@ -937,6 +945,15 @@ Internet-Draft                    codcp                    December 2022
               RFC 7958, DOI 10.17487/RFC7958, August 2016,
               <https://www.rfc-editor.org/info/rfc7958>.
 
+
+
+
+
+Homburg                   Expires 26 June 2023                 [Page 17]
+
+Internet-Draft                    codcp                    December 2022
+
+
    [RFC8484]  Hoffman, P. and P. McManus, "DNS Queries over HTTPS
               (DoH)", RFC 8484, DOI 10.17487/RFC8484, October 2018,
               <https://www.rfc-editor.org/info/rfc8484>.
@@ -946,14 +963,6 @@ Internet-Draft                    codcp                    December 2022
               DOI 10.17487/RFC9000, May 2021,
               <https://www.rfc-editor.org/info/rfc9000>.
 
-
-
-
-Homburg                   Expires 24 June 2023                 [Page 17]
-
-Internet-Draft                    codcp                    December 2022
-
-
 Appendix A.  Change history
 
    (This section to be removed by the RFC editor.)
@@ -961,7 +970,8 @@ Appendix A.  Change history
    *  draft-homburg-dnsop-codcp-00
 
       -  Renamed to draft-homburg-dnsop-codcp
-      -  IANA section with allocated code points
+      -  IANA section with allocated code point for BADPROXYPOLICY
+      -  Proxy Control Option rewritten to be TLV-based
 
    *  draft-homburg-add-codcp-00
 
@@ -995,14 +1005,4 @@ Author's Address
 
 
 
-
-
-
-
-
-
-
-
-
-
-Homburg                   Expires 24 June 2023                 [Page 18]
+Homburg                   Expires 26 June 2023                 [Page 18]

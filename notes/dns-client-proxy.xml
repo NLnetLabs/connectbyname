@@ -151,7 +151,7 @@ in a PROXY CONTROL Option or the option is malformed.</t>
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
    2: |                         OPTION-LENGTH                         |
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   4: ~                 Type-Length-Value (TLV) Options               ~
+   4: ~              Type-Length-Value (TLV) Sub-Options              ~
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </artwork>
 <t>where</t>
@@ -189,15 +189,22 @@ SUB-OPTION-LENGTH fields</t>
 <dd><t>Sub-option specific data</t>
 </dd>
 </dl>
+<t>Associated with this option is a new error, BADPROXYPOLICY. When
+a proxy cannot meet the requirements in a PROXY CONTROL Option or the
+option is malformed, it returns this error.</t>
+<t>If the proxy returns a BADPROXYPOLICY error, the proxy MAY include
+a PROXY CONTROL Option that lists what the proxy can do. For example,
+if authenticated encryption is not possible, but unauthenticated is,
+then the proxy may include an option that has the UA bit set.</t>
 
-<section anchor="security-flags-sub-option"><name>Security Flags Sub-option</name>
+<section anchor="security-constraints-sub-option"><name>Security Constraints Sub-option</name>
 
 <artwork>      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
    0: |                      SUB-OPTION-CODE                          |
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
    2: |                     SUB-OPTION-LENGTH                         |
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   4: | U |UA | A | P | D |                         Z                 |
+   4: | U |UA | A | P | D |                     Z                     |
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
 </artwork>
 <t>where</t>
@@ -207,13 +214,13 @@ SUB-OPTION-LENGTH fields</t>
 <dd><t>To be decided</t>
 </dd>
 <dt>SUB-OPTION-LENGTH</dt>
-<dd><t>2 (this option defines a 16-bit flags field</t>
+<dd><t>2 (this sub-option defines a 16-bit flags field</t>
 </dd>
 <dt>U</dt>
 <dd><t>force the use of unencrypted communication (Do53)</t>
 </dd>
 <dt>UA</dt>
-<dd><t>require unauthenticated encryption</t>
+<dd><t>require encryption, authentication is allowed but not required</t>
 </dd>
 <dt>A</dt>
 <dd><t>require authenticated encryption</t>
@@ -228,125 +235,8 @@ SUB-OPTION-LENGTH fields</t>
 <dd><t>reserved, MUST be zero when sending, MUST be ignored when received</t>
 </dd>
 </dl>
-</section>
-
-<section anchor="transport-priority-sub-option"><name>Transport Priority Sub-option</name>
-
-<artwork>      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   0: |                      SUB-OPTION-CODE                          |
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   2: |                     SUB-OPTION-LENGTH                         |
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   4: | TRANSPORT PROTOCOL            |        PRIORITY               |
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-</artwork>
-<t>where</t>
-
-<dl newline="true">
-<dt>SUB-OPTION-CODE</dt>
-<dd><t>To be decided</t>
-</dd>
-<dt>SUB-OPTION-LENGTH</dt>
-<dd><t>2</t>
-</dd>
-<dt>TRANSPORT PROTOCOL</dt>
-<dd><t>A DNS transport protocol idenfier. The value 0 is used to specify any
-transport implemented by server.</t>
-</dd>
-<dt>PRIORITY</dt>
-<dd><t>The priority of this transport relative to other transports. The value 0
-indicates the highest priority and 254 the lowest. The value 255 is
-reserved to mean that this protocol MUST NOT be used.</t>
-</dd>
-</dl>
-</section>
-
-<section anchor="domain-name"><name>Domain Name</name>
-
-<artwork>      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   0: |                      SUB-OPTION-CODE                          |
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   2: |                     SUB-OPTION-LENGTH                         |
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   4: ~                        DOMAIN NAME                            ~
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-</artwork>
-<t>where</t>
-
-<dl newline="true">
-<dt>SUB-OPTION-CODE</dt>
-<dd><t>To be decided</t>
-</dd>
-<dt>SUB-OPTION-LENGTH</dt>
-<dd><t>Length of this sub-option excluding the SUB-OPTION-CODE and
-SUB-OPTION-LENGTH fields</t>
-</dd>
-<dt>DOMAIN NAME</dt>
-<dd><t>domain name for authentication or resolving IP addresses. The domain name
-is encoded in uncompressed DNS wire format.</t>
-</dd>
-</dl>
-</section>
-
-<section anchor="svc-parameter"><name>SVC Parameter</name>
-
-<artwork>      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   0: |                      SUB-OPTION-CODE                          |
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   2: |                     SUB-OPTION-LENGTH                         |
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   4: |                       SVCPARAM KEY                            |
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   6: ~                         SVCPARAM                              ~
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-</artwork>
-<t>where</t>
-
-<dl newline="true">
-<dt>SUB-OPTION-CODE</dt>
-<dd><t>To be decided</t>
-</dd>
-<dt>SUB-OPTION-LENGTH</dt>
-<dd><t>Length of this sub-option excluding the SUB-OPTION-CODE and
-SUB-OPTION-LENGTH fields</t>
-</dd>
-<dt>SVCPARAM KEY</dt>
-<dd><t>Key of Svc parameters as defined in [ref]</t>
-</dd>
-<dt>SvcParam</dt>
-<dd><t>Svc parameter value</t>
-</dd>
-</dl>
-</section>
-
-<section anchor="interface-name"><name>Interface Name</name>
-
-<artwork>      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   0: |                      SUB-OPTION-CODE                          |
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   2: |                     SUB-OPTION-LENGTH                         |
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   4: ~                      INTERFACE NAME                           ~
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-</artwork>
-<t>where</t>
-
-<dl newline="true">
-<dt>SUB-OPTION-CODE</dt>
-<dd><t>To be decided</t>
-</dd>
-<dt>SUB-OPTION-LENGTH</dt>
-<dd><t>Length of this sub-option excluding the SUB-OPTION-CODE and
-SUB-OPTION-LENGTH fields</t>
-</dd>
-<dt>INTERFACE NAME</dt>
-<dd><t>name of outgoing interface for transport connections</t>
-</dd>
-</dl>
-<t>This option is designed to give control over what level of detail it
-wants to specify. The first 5 flags (U, UA, A, P, and D) give general
-requirements for properties of DNS transports that are used by the
-client proxy.
+<t>This sub-option gives the security contraints of the DNS transports that
+are used by the client proxy.
 The U, UA, and A flags are mutually exclusive. If more than one
 flag is set, the proxy SHOULD return a BADPROXYPOLICY error.
 There are four possibilities:</t>
@@ -358,24 +248,24 @@ unauthenticated encryption is tried. If that also fails, the proxy
 resorts to an unencrypted transport.
 It is an error
 if either or both of the P or D flags is set and the proxy SHOULD
-return a BADPROXYPOLICY error.</t>
+return a BADPROXYPOLICY error if that is the case.</t>
 </dd>
 <dt>U = 1, UA = 0, A = 0</dt>
-<dd><t>The proxy only tries only unencrypted transports.
+<dd><t>The proxy tries only unencrypted transports.
 It is an error
 if either or both of the P or D flags is set and the proxy SHOULD return a
-BADPROXYPOLICY error.</t>
+BADPROXYPOLICY error if that is the case.</t>
 </dd>
 <dt>U = 0, UA = 1, A = 0</dt>
 <dd><t>An effort is made to reach authenticated encryption, if that fails,
 unauthenticated encryption is tried.
 It is an error
 if either or both of the P or D flags is set and the proxy SHOULD return a
-BADPROXYPOLICY error.</t>
+BADPROXYPOLICY error if that is the case.</t>
 </dd>
 <dt>U = 0, UA = 0, A = 1</dt>
 <dd><t>The proxy only tries authenticated encryption. The P and D flags can be
-set to control which authentication mechanism has to be used.</t>
+used to control which authentication mechanism has to be used.</t>
 </dd>
 </dl>
 <t>The P and D flags allow the application to require
@@ -410,49 +300,172 @@ has to succeed.</t>
 <t>Note that these two flags can only be used in combination with the A
 flag. The proxy SHOULD return a BADPROXYPOLICY error if either or both of the
 P or D flags is set and the A flag is clear.</t>
-<t>The next flags provide more detailed control over which transports
-should be used or not. For each of 5 different transports
-(Do53, DoT, DoH with ALPN h2, DoH with ALPN h3, DoQ) there is a flag
-to allow (A53,AT,AH2,AH3,AQ) or disallow (D53,DT,DH2,DH3,DQ) the use of the
-transport. There is space to add more transports later. Note that setting
-the A flag and the D flag for a protocol (for example, setting both the
-A53 and the D53 flags) is not allowed and a proxy SHOULD reject such a request.</t>
-<t>To future proof applications, there is a single flag DD, that by default
-disallows transports that are not explicitly listed. With this flag clear,
-the application allows all transports that are not explicitly disallowed
-(including future transports). With the flag set, the
-application has to explicitly list which transports can be used.
-For example, by setting only DD and AT, the application forces the
-use of DoT.</t>
-<t>When DD = 0:</t>
+</section>
 
-<ul spacing="compact">
-<li>all transports are in the pool of potentially usable transports</li>
-<li>D53, DT, DH2, DH3 and DQ remove those transports from the pool.</li>
-<li>The values of A53, AT, AH2, AH3 and AQ are irrelevant</li>
-</ul>
-<t>When DD = 1:</t>
+<section anchor="transport-priority-sub-option"><name>Transport Priority Sub-option</name>
 
-<ul spacing="compact">
-<li>no transports are in the pool of potentially usable transports</li>
-<li>A53, AT, AH2, AH3 and AQ add those transports to the pool</li>
-<li>The values of D53, DT, DH2, DH3 and DQ are irrelevant</li>
-</ul>
-<t>Finally, an application can specify its own resolvers or rely on the
-resolvers that are known to the proxy. If ADN Length and Addr Length
-are both zero, then the application requests the resolvers known to
-the proxy. [Note: it is unclear at the moment what to do with any
-Service Parameters]</t>
-<t>If the application specifies only an authentication-domain-name then the
+<artwork>      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                      SUB-OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                     SUB-OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: | TRANSPORT PROTOCOL            |        PRIORITY               |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+</artwork>
+<t>where</t>
+
+<dl newline="true">
+<dt>SUB-OPTION-CODE</dt>
+<dd><t>To be decided</t>
+</dd>
+<dt>SUB-OPTION-LENGTH</dt>
+<dd><t>2</t>
+</dd>
+<dt>TRANSPORT PROTOCOL</dt>
+<dd><t>A DNS transport protocol idenfier. The value 0 is used to specify any
+transport implemented by server.</t>
+</dd>
+<dt>PRIORITY</dt>
+<dd><t>The priority of this transport relative to other transports. The value 0
+indicates the highest priority and 254 the lowest. The value 255 is
+defined to mean that this protocol MUST NOT be used.</t>
+</dd>
+</dl>
+<t>A new registry is need for transport protocols. Initial values:</t>
+
+<dl>
+<dt>0</dt>
+<dd><t>a default list of transports built into the proxy</t>
+</dd>
+<dt>1</dt>
+<dd><t>unencrypted UDP , fallback to unencrypted TCP if the TC bit is set in the
+reply</t>
+</dd>
+<dt>2</dt>
+<dd><t>unencrypted without fallback</t>
+</dd>
+<dt>3</dt>
+<dd><t>unencrypted TCP</t>
+</dd>
+<dt>4</dt>
+<dd><t>DNS over TCP and TLS</t>
+</dd>
+<dt>5</dt>
+<dd><t>DNS over HTTPS</t>
+</dd>
+<dt>6</dt>
+<dd><t>DNS over QUIC</t>
+</dd>
+</dl>
+<t>Priorities are take over all Proxy Control options in a DNS request. This
+allows the application to specify an explicit order (or the lack of order)
+among different upstream resolvers.</t>
+<t>For protocol 0 (the default list), all protocols that are explicitly
+listed in a Proxy Control option are excluded from the default list.
+In other words, when processing the default list, all explicitly listed
+protocols are excluded.</t>
+</section>
+
+<section anchor="domain-name"><name>Domain Name</name>
+
+<artwork>      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                      SUB-OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                     SUB-OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: ~                        DOMAIN NAME                            ~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+</artwork>
+<t>where</t>
+
+<dl newline="true">
+<dt>SUB-OPTION-CODE</dt>
+<dd><t>To be decided</t>
+</dd>
+<dt>SUB-OPTION-LENGTH</dt>
+<dd><t>Length of this sub-option excluding the SUB-OPTION-CODE and
+SUB-OPTION-LENGTH fields</t>
+</dd>
+<dt>DOMAIN NAME</dt>
+<dd><t>domain name for authentication or resolving IP addresses. The domain name
+is encoded in uncompressed DNS wire format.</t>
+</dd>
+</dl>
+<t>If the option contains a domain name but no IP addresses (see ipv4hints and
+ipv6hints below) then the
 proxy is expected to resolve the name to addresses. If only addresses
 are specified then the proxy assumes that no name is known (though
 a PKIX certificate may include an address literal in the subjectAltName).
 If both a name and address are specified then the proxy will use the
 specified address and use the name for authentication.</t>
-<t>To simplify the encoding of the option, an option with addresses will
-have either IPv4 or IPv6 addresses. If the application wants to specify
-both IPv4 and IPv6 addresses for a certain authentication-domain-name
-then it has to include two options.</t>
+<t>The the option contains neither a domain name nor any IP addresses
+then the application requests the resolvers known to
+the proxy.</t>
+</section>
+
+<section anchor="svc-parameter"><name>SVC Parameter</name>
+
+<artwork>      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                      SUB-OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                     SUB-OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: |                       SVCPARAM KEY                            |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   6: ~                         SVCPARAM                              ~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+</artwork>
+<t>where</t>
+
+<dl newline="true">
+<dt>SUB-OPTION-CODE</dt>
+<dd><t>To be decided</t>
+</dd>
+<dt>SUB-OPTION-LENGTH</dt>
+<dd><t>Length of this sub-option excluding the SUB-OPTION-CODE and
+SUB-OPTION-LENGTH fields</t>
+</dd>
+<dt>SVCPARAM KEY</dt>
+<dd><t>Key of Svc parameters as defined in [ref]</t>
+</dd>
+<dt>SvcParam</dt>
+<dd><t>Svc parameter value</t>
+</dd>
+</dl>
+<t>This document take the meaning of SvcParamKeys 'alpn', 'port', and 'dohpath'
+from [draft-ietf-add-svcb-dns] with the exception that 'alpn' does not have
+to be present (i.e., the 'MUST be present' requirement does not apply)</t>
+<t>Other relevant SvcParamKeys from [draft-ietf-dnsop-svcb-https] are 'mandatory',
+'ech', 'ipv4hint' and 'ipv6hint'.</t>
+<t>Instead of defining new sub-options to store IPv4 and IPv6 address, this
+document re-uses the ipv4hints and ipv6hints. However the semantics are redefined to be that these option and not hints, be are the actual addresses that
+are to be used.</t>
+</section>
+
+<section anchor="interface-name"><name>Interface Name</name>
+
+<artwork>      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                      SUB-OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                     SUB-OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: ~                      INTERFACE NAME                           ~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+</artwork>
+<t>where</t>
+
+<dl newline="true">
+<dt>SUB-OPTION-CODE</dt>
+<dd><t>To be decided</t>
+</dd>
+<dt>SUB-OPTION-LENGTH</dt>
+<dd><t>Length of this sub-option excluding the SUB-OPTION-CODE and
+SUB-OPTION-LENGTH fields</t>
+</dd>
+<dt>INTERFACE NAME</dt>
+<dd><t>name of outgoing interface for transport connections</t>
+</dd>
+</dl>
 <t>An application may want to specify a DNS resolver that is reachable
 through an IPv6 link-local address.
 IPv6 link-local addresses are special in that they require a zone to be
@@ -465,17 +478,6 @@ do not agree on zone names. However, if the proxy is on the same host
 as the application, then the zone identifier for the link-local address
 can be specified in the Interface field. For this purpose an interface
 name can also be an interface index expressed as a decimal string.</t>
-<t>When present, Service Parameters specify how to connect. Otherwise it is
-up to the proxy to try various possibilities. For Service Parameters,
-the values of the ipv4hint and ipv6hint fields are ignored. Addresses
-can only be specified using the addresses field in the PROXY CONTROL Option.</t>
-<t>Associated with this option is a new error, BADPROXYPOLICY. When
-a proxy cannot meet the requirements in a PROXY CONTROL Option or the
-option is malformed, it returns this error.</t>
-<t>If the proxy returns a BADPROXYPOLICY error, the proxy MAY include
-a PROXY CONTROL Option that lists what the proxy can do. For example,
-if authenticated encryption is not possible, but unauthenticated is,
-then the proxy may include an option that has the UA bit set.</t>
 </section>
 </section>
 
@@ -711,7 +713,7 @@ return the BADPROXYPOLICY error.</t>
 
 <artwork> INFO-CODE   Name             Purpose                       Reference
 ----------- ---------------- ----------------------------- -----------
- TBD         BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
+ 28          BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
 </artwork>
 </section>
 
@@ -749,7 +751,8 @@ return the BADPROXYPOLICY error.</t>
 
 <ul spacing="compact">
 <li>Renamed to draft-homburg-dnsop-codcp</li>
-<li>IANA section with allocated code points</li>
+<li>IANA section with allocated code point for BADPROXYPOLICY</li>
+<li>Proxy Control Option rewritten to be TLV-based</li>
 </ul></li>
 <li><t>draft-homburg-add-codcp-00</t>
 

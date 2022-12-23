@@ -180,7 +180,7 @@ in a PROXY CONTROL Option or the option is malformed.
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
    2: |                         OPTION-LENGTH                         |
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   4: ~                 Type-Length-Value (TLV) Options               ~
+   4: ~              Type-Length-Value (TLV) Sub-Options              ~
       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ~~~
 
@@ -224,7 +224,16 @@ Sub-Option Data
 
 : Sub-option specific data
 
-## Security Flags Sub-option
+Associated with this option is a new error, BADPROXYPOLICY. When
+a proxy cannot meet the requirements in a PROXY CONTROL Option or the
+option is malformed, it returns this error.
+
+If the proxy returns a BADPROXYPOLICY error, the proxy MAY include
+a PROXY CONTROL Option that lists what the proxy can do. For example,
+if authenticated encryption is not possible, but unauthenticated is,
+then the proxy may include an option that has the UA bit set.
+
+## Security Constraints Sub-option
 
 ~~~
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
@@ -232,7 +241,7 @@ Sub-Option Data
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
    2: |                     SUB-OPTION-LENGTH                         |
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   4: | U |UA | A | P | D |                         Z                 |
+   4: | U |UA | A | P | D |                     Z                     |
       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
 ~~~
 
@@ -245,7 +254,7 @@ SUB-OPTION-CODE
 
 SUB-OPTION-LENGTH
 
-: 2 (this option defines a 16-bit flags field
+: 2 (this sub-option defines a 16-bit flags field
 
 U
 
@@ -253,7 +262,7 @@ U
 
 UA
 
-: require unauthenticated encryption
+: require encryption, authentication is allowed but not required
 
 A
 
@@ -270,6 +279,76 @@ D
 Z
 
 : reserved, MUST be zero when sending, MUST be ignored when received
+
+This sub-option gives the security contraints of the DNS transports that
+are used by the client proxy.
+The U, UA, and A flags are mutually exclusive. If more than one
+flag is set, the proxy SHOULD return a BADPROXYPOLICY error.
+There are four possibilities:
+
+U = 0, UA = 0, A = 0
+
+: An effort is made to reach authenticated encryption, if that fails,
+unauthenticated encryption is tried. If that also fails, the proxy
+resorts to an unencrypted transport.
+It is an error
+if either or both of the P or D flags is set and the proxy SHOULD
+return a BADPROXYPOLICY error if that is the case.
+
+U = 1, UA = 0, A = 0
+
+: The proxy tries only unencrypted transports.
+It is an error
+if either or both of the P or D flags is set and the proxy SHOULD return a
+BADPROXYPOLICY error if that is the case.
+
+U = 0, UA = 1, A = 0
+
+: An effort is made to reach authenticated encryption, if that fails,
+unauthenticated encryption is tried.
+It is an error
+if either or both of the P or D flags is set and the proxy SHOULD return a
+BADPROXYPOLICY error if that is the case.
+
+U = 0, UA = 0, A = 1
+
+: The proxy only tries authenticated encryption. The P and D flags can be
+used to control which authentication mechanism has to be used.
+
+The P and D flags allow the application to require
+a specific authentication mechanism (PKIX or DANE). The meaning of the
+flags is the following:
+
+P = 0, D = 0
+
+: At least one of the two mechanisms has to validate for authenticated
+encryption to succeed.
+
+P = 1, D = 0
+
+: PKIX validation has to succeed, the status of DANE validation is ignored.
+
+P = 0, D = 1
+
+: A DANE record has to be present and be DNSSEC valid.
+A DANE record has
+a Certificate Usage Field. For some values of this field (the values zero
+and one), DANE requires PKIX validation.
+In those cases, PKIX validation is also required according to the DANE
+specifications. For the values two and three, DANE does not require
+PKIX and because the P flag is zero, the result of PKIX validation has to
+be ignored.
+
+P = 1, D = 1
+
+: Both PKIX and DANE are required together. For PKIX, this means that
+PKIX validation has to succeed. For DANE it means that a DANE record
+has to be present and be DNSSEC valid. Validation using the DANE record
+has to succeed.
+
+Note that these two flags can only be used in combination with the A
+flag. The proxy SHOULD return a BADPROXYPOLICY error if either or both of the
+P or D flags is set and the A flag is clear.
 
 ## Transport Priority Sub-option
 
@@ -303,7 +382,47 @@ PRIORITY
 
 : The priority of this transport relative to other transports. The value 0
   indicates the highest priority and 254 the lowest. The value 255 is
-  reserved to mean that this protocol MUST NOT be used.
+  defined to mean that this protocol MUST NOT be used.
+
+A new registry is need for transport protocols. Initial values:
+
+0
+
+: a default list of transports built into the proxy
+
+1
+
+: unencrypted UDP , fallback to unencrypted TCP if the TC bit is set in the
+reply
+
+2
+
+: unencrypted without fallback
+
+3
+
+: unencrypted TCP
+
+4
+
+: DNS over TCP and TLS
+
+5
+
+: DNS over HTTPS
+
+6
+
+: DNS over QUIC
+
+Priorities are take over all Proxy Control options in a DNS request. This
+allows the application to specify an explicit order (or the lack of order)
+among different upstream resolvers.
+
+For protocol 0 (the default list), all protocols that are explicitly
+listed in a Proxy Control option are excluded from the default list.
+In other words, when processing the default list, all explicitly listed
+protocols are excluded.
 
 ## Domain Name
 
@@ -333,6 +452,18 @@ DOMAIN NAME
 
 : domain name for authentication or resolving IP addresses. The domain name
 is encoded in uncompressed DNS wire format.
+
+If the option contains a domain name but no IP addresses (see ipv4hints and
+ipv6hints below) then the
+proxy is expected to resolve the name to addresses. If only addresses
+are specified then the proxy assumes that no name is known (though
+a PKIX certificate may include an address literal in the subjectAltName).
+If both a name and address are specified then the proxy will use the
+specified address and use the name for authentication.
+
+The the option contains neither a domain name nor any IP addresses
+then the application requests the resolvers known to
+the proxy.
 
 ## SVC Parameter
 
@@ -368,6 +499,17 @@ SvcParam
 
 : Svc parameter value
 
+This document take the meaning of SvcParamKeys 'alpn', 'port', and 'dohpath'
+from [draft-ietf-add-svcb-dns] with the exception that 'alpn' does not have
+to be present (i.e., the 'MUST be present' requirement does not apply)
+
+Other relevant SvcParamKeys from [draft-ietf-dnsop-svcb-https] are 'mandatory',
+'ech', 'ipv4hint' and 'ipv6hint'.
+
+Instead of defining new sub-options to store IPv4 and IPv6 address, this
+document re-uses the ipv4hints and ipv6hints. However the semantics are redefined to be that these option and not hints, be are the actual addresses that
+are to be used.
+
 ## Interface Name
 
 ~~~
@@ -396,125 +538,7 @@ INTERFACE NAME
 
 : name of outgoing interface for transport connections
 
-This option is designed to give control over what level of detail it
-wants to specify. The first 5 flags (U, UA, A, P, and D) give general
-requirements for properties of DNS transports that are used by the
-client proxy.
-The U, UA, and A flags are mutually exclusive. If more than one
-flag is set, the proxy SHOULD return a BADPROXYPOLICY error.
-There are four possibilities:
-
-U = 0, UA = 0, A = 0
-
-: An effort is made to reach authenticated encryption, if that fails,
-unauthenticated encryption is tried. If that also fails, the proxy
-resorts to an unencrypted transport. 
-It is an error
-if either or both of the P or D flags is set and the proxy SHOULD
-return a BADPROXYPOLICY error.
-
-U = 1, UA = 0, A = 0
-
-: The proxy only tries only unencrypted transports.
-It is an error
-if either or both of the P or D flags is set and the proxy SHOULD return a
-BADPROXYPOLICY error.
-
-U = 0, UA = 1, A = 0
-
-: An effort is made to reach authenticated encryption, if that fails,
-unauthenticated encryption is tried. 
-It is an error
-if either or both of the P or D flags is set and the proxy SHOULD return a
-BADPROXYPOLICY error.
-
-U = 0, UA = 0, A = 1
-
-: The proxy only tries authenticated encryption. The P and D flags can be
-set to control which authentication mechanism has to be used.
-
-The P and D flags allow the application to require
-a specific authentication mechanism (PKIX or DANE). The meaning of the 
-flags is the following: 
-
-P = 0, D = 0
-
-: At least one of the two mechanisms has to validate for authenticated
-encryption to succeed.
-
-P = 1, D = 0
-
-: PKIX validation has to succeed, the status of DANE validation is ignored.
-
-P = 0, D = 1
-
-: A DANE record has to be present and be DNSSEC valid. 
-A DANE record has
-a Certificate Usage Field. For some values of this field (the values zero
-and one), DANE requires PKIX validation.
-In those cases, PKIX validation is also required according to the DANE
-specifications. For the values two and three, DANE does not require
-PKIX and because the P flag is zero, the result of PKIX validation has to
-be ignored.
-
-P = 1, D = 1
-
-: Both PKIX and DANE are required together. For PKIX, this means that
-PKIX validation has to succeed. For DANE it means that a DANE record 
-has to be present and be DNSSEC valid. Validation using the DANE record
-has to succeed. 
-
-Note that these two flags can only be used in combination with the A
-flag. The proxy SHOULD return a BADPROXYPOLICY error if either or both of the 
-P or D flags is set and the A flag is clear.
-
-The next flags provide more detailed control over which transports
-should be used or not. For each of 5 different transports
-(Do53, DoT, DoH with ALPN h2, DoH with ALPN h3, DoQ) there is a flag
-to allow (A53,AT,AH2,AH3,AQ) or disallow (D53,DT,DH2,DH3,DQ) the use of the
-transport. There is space to add more transports later. Note that setting
-the A flag and the D flag for a protocol (for example, setting both the
-A53 and the D53 flags) is not allowed and a proxy SHOULD reject such a request.
-
-To future proof applications, there is a single flag DD, that by default
-disallows transports that are not explicitly listed. With this flag clear,
-the application allows all transports that are not explicitly disallowed
-(including future transports). With the flag set, the
-application has to explicitly list which transports can be used.
-For example, by setting only DD and AT, the application forces the
-use of DoT.
-
-When DD = 0:
-
-* all transports are in the pool of potentially usable transports
-* D53, DT, DH2, DH3 and DQ remove those transports from the pool.
-* The values of A53, AT, AH2, AH3 and AQ are irrelevant
-
-When DD = 1:
-
-* no transports are in the pool of potentially usable transports
-* A53, AT, AH2, AH3 and AQ add those transports to the pool
-* The values of D53, DT, DH2, DH3 and DQ are irrelevant
-
-Finally, an application can specify its own resolvers or rely on the
-resolvers that are known to the proxy. If ADN Length and Addr Length
-are both zero, then the application requests the resolvers known to
-the proxy. [Note: it is unclear at the moment what to do with any
-Service Parameters]
-
-If the application specifies only an authentication-domain-name then the
-proxy is expected to resolve the name to addresses. If only addresses
-are specified then the proxy assumes that no name is known (though
-a PKIX certificate may include an address literal in the subjectAltName).
-If both a name and address are specified then the proxy will use the
-specified address and use the name for authentication.
-
-To simplify the encoding of the option, an option with addresses will
-have either IPv4 or IPv6 addresses. If the application wants to specify
-both IPv4 and IPv6 addresses for a certain authentication-domain-name
-then it has to include two options. 
-
-An application may want to specify a DNS resolver that is reachable 
+An application may want to specify a DNS resolver that is reachable
 through an IPv6 link-local address.
 IPv6 link-local addresses are special in that they require a zone to be
 specified, either explicitly or implicitly. Typically for a link-local
@@ -526,21 +550,6 @@ do not agree on zone names. However, if the proxy is on the same host
 as the application, then the zone identifier for the link-local address
 can be specified in the Interface field. For this purpose an interface
 name can also be an interface index expressed as a decimal string.
-
-
-When present, Service Parameters specify how to connect. Otherwise it is
-up to the proxy to try various possibilities. For Service Parameters,
-the values of the ipv4hint and ipv6hint fields are ignored. Addresses
-can only be specified using the addresses field in the PROXY CONTROL Option.
-
-Associated with this option is a new error, BADPROXYPOLICY. When
-a proxy cannot meet the requirements in a PROXY CONTROL Option or the
-option is malformed, it returns this error.
-
-If the proxy returns a BADPROXYPOLICY error, the proxy MAY include
-a PROXY CONTROL Option that lists what the proxy can do. For example,
-if authenticated encryption is not possible, but unauthenticated is,
-then the proxy may include an option that has the UA bit set.
 
 # PROXY SCOPE OPTION
 
@@ -579,7 +588,7 @@ values:
 The purpose of this option is to deal with proxies that forward
 DNS traffic without first removing any EDNS(0) options. The option requests
 the DNS proxy that processes the option to report the scope of the source
-address. 
+address.
 
 # TRUST ANCHOR OPTION
 
@@ -694,9 +703,9 @@ The proxy SHOULD prefer more private transports over less private ones.
 
 If the proxy cannot obtain a connection to a recursive resolver in a way that
 matches the provided policy, then the proxy sets the BADPROXYPOLICY
-response code in the reply. 
+response code in the reply.
 
-The proxy MUST implement "resolver.arpa" as a locally served zone. 
+The proxy MUST implement "resolver.arpa" as a locally served zone.
 Proxies SHOULD respond to all queries with NODATA unless other behavior
 is specified in a different document.
 
@@ -706,7 +715,7 @@ in the proxy, then the proxy add a PROXY CONTROL Options dat details the
 connection to the recursive resolver (i.e., the U, UA, or A flag depending
 on encryption and authentication, P and or D for authenticated connections,
 A53, AT, AH2, AH3, or AQ depending on the transport (or none of those for a
-future transport). Furthermore the proxy includes the address it 
+future transport). Furthermore the proxy includes the address it
 connected to, the Domain Name if known, any Service Parameters and
 the outgoing interface name if known.
 
@@ -745,14 +754,14 @@ sure that doing so does not violate the policy set by the application.
 A privacy sensitive application SHOULD first issue a SOA query for
 resolver.arpa to verify that the local proxy supports the options documented
 in the document. If the proxy does not support this document then the
-application can refrain from sending queries that reveal privacy sensitive 
+application can refrain from sending queries that reveal privacy sensitive
 names.
 
 By setting the interface name, an application can select an outging interface
-on the proxy. Proxies should make sure that a query receives from a 
+on the proxy. Proxies should make sure that a query receives from a
 process that is authorized to do so. By default, a proxy SHOULD allow only
 process on the same host to use this feature. If an unauthorized process
-includes an option with the interface name set, then the proxy SHOULD 
+includes an option with the interface name set, then the proxy SHOULD
 return the BADPROXYPOLICY error.
 
 # IANA Considerations
@@ -769,7 +778,7 @@ IANA has assigned the following DNS EDNS0 option codes:
 
      INFO-CODE   Name             Purpose                       Reference
     ----------- ---------------- ----------------------------- -----------
-     TBD         BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
+     28          BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
 
 # Acknowledgements
 
@@ -784,7 +793,8 @@ Many thanks to Yorgos Thessalonikefs and Willem Toorop for their feedback.
 * draft-homburg-dnsop-codcp-00
 
   - Renamed to draft-homburg-dnsop-codcp
-  - IANA section with allocated code points
+  - IANA section with allocated code point for BADPROXYPOLICY
+  - Proxy Control Option rewritten to be TLV-based
 
 * draft-homburg-add-codcp-00
 
