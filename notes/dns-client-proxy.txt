@@ -3,9 +3,9 @@
 
 
 DNSOP                                                       P.C. Homburg
-Internet-Draft                                          23 December 2022
+Internet-Draft                                            9 January 2023
 Intended status: Standards Track                                        
-Expires: 26 June 2023
+Expires: 13 July 2023
 
 
                  Control Options For DNS Client Proxies
@@ -40,11 +40,11 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 26 June 2023.
+   This Internet-Draft will expire on 13 July 2023.
 
 Copyright Notice
 
-   Copyright (c) 2022 IETF Trust and the persons identified as the
+   Copyright (c) 2023 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Homburg                   Expires 26 June 2023                  [Page 1]
+Homburg                   Expires 13 July 2023                  [Page 1]
 
-Internet-Draft                    codcp                    December 2022
+Internet-Draft                    codcp                     January 2023
 
 
    Please review these documents carefully, as they describe your rights
@@ -73,9 +73,9 @@ Table of Contents
    5.  PROXY CONTROL OPTION  . . . . . . . . . . . . . . . . . . . .   5
      5.1.  Security Constraints Sub-option . . . . . . . . . . . . .   6
      5.2.  Transport Priority Sub-option . . . . . . . . . . . . . .   8
-     5.3.  Domain Name . . . . . . . . . . . . . . . . . . . . . . .   9
-     5.4.  SVC Parameter . . . . . . . . . . . . . . . . . . . . . .  10
-     5.5.  Interface Name  . . . . . . . . . . . . . . . . . . . . .  11
+     5.3.  SVC Parameter . . . . . . . . . . . . . . . . . . . . . .   9
+     5.4.  Domain Name . . . . . . . . . . . . . . . . . . . . . . .  10
+     5.5.  Interface Name  . . . . . . . . . . . . . . . . . . . . .  10
    6.  PROXY SCOPE OPTION  . . . . . . . . . . . . . . . . . . . . .  11
    7.  TRUST ANCHOR OPTION . . . . . . . . . . . . . . . . . . . . .  12
    8.  Protocol Specification  . . . . . . . . . . . . . . . . . . .  13
@@ -86,11 +86,11 @@ Table of Contents
    9.  Connection Between Stub Resolver And Proxy  . . . . . . . . .  15
    10. Security Considerations . . . . . . . . . . . . . . . . . . .  16
    11. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  16
-   12. Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  16
-   13. Normative References  . . . . . . . . . . . . . . . . . . . .  16
-   14. Informative References  . . . . . . . . . . . . . . . . . . .  16
-   Appendix A.  Change history . . . . . . . . . . . . . . . . . . .  18
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  18
+   12. Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  18
+   13. Normative References  . . . . . . . . . . . . . . . . . . . .  18
+   14. Informative References  . . . . . . . . . . . . . . . . . . .  18
+   Appendix A.  Change history . . . . . . . . . . . . . . . . . . .  19
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  20
 
 1.  Definitions
 
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Homburg                   Expires 26 June 2023                  [Page 2]
+Homburg                   Expires 13 July 2023                  [Page 2]
 
-Internet-Draft                    codcp                    December 2022
+Internet-Draft                    codcp                     January 2023
 
 
    EDNS(0) Option  An option as described in [RFC6891]
@@ -165,9 +165,9 @@ Internet-Draft                    codcp                    December 2022
 
 
 
-Homburg                   Expires 26 June 2023                  [Page 3]
+Homburg                   Expires 13 July 2023                  [Page 3]
 
-Internet-Draft                    codcp                    December 2022
+Internet-Draft                    codcp                     January 2023
 
 
    application also specifies the names and/or IP addresses of upstream
@@ -221,9 +221,9 @@ Internet-Draft                    codcp                    December 2022
 
 
 
-Homburg                   Expires 26 June 2023                  [Page 4]
+Homburg                   Expires 13 July 2023                  [Page 4]
 
-Internet-Draft                    codcp                    December 2022
+Internet-Draft                    codcp                     January 2023
 
 
 4.  Description
@@ -256,7 +256,7 @@ Internet-Draft                    codcp                    December 2022
    where
 
    OPTION-CODE
-      To be decided
+      To be decided (TBD1)
 
    OPTION-LENGTH
       Length of this option excluding the OPTION-CODE and OPTION-LENGTH
@@ -277,13 +277,13 @@ Internet-Draft                    codcp                    December 2022
 
 
 
-Homburg                   Expires 26 June 2023                  [Page 5]
+Homburg                   Expires 13 July 2023                  [Page 5]
 
-Internet-Draft                    codcp                    December 2022
+Internet-Draft                    codcp                     January 2023
 
 
    SUB-OPTION-CODE
-      To be decided
+      16-bit identifier for the sub-option
 
    SUB-OPTION-LENGTH
       Length of this sub-option excluding the SUB-OPTION-CODE and SUB-
@@ -299,7 +299,7 @@ Internet-Draft                    codcp                    December 2022
    If the proxy returns a BADPROXYPOLICY error, the proxy MAY include a
    PROXY CONTROL Option that lists what the proxy can do.  For example,
    if authenticated encryption is not possible, but unauthenticated is,
-   then the proxy may include an option that has the UA bit set.
+   then the proxy may include an option show that.
 
 5.1.  Security Constraints Sub-option
 
@@ -333,9 +333,9 @@ Internet-Draft                    codcp                    December 2022
 
 
 
-Homburg                   Expires 26 June 2023                  [Page 6]
+Homburg                   Expires 13 July 2023                  [Page 6]
 
-Internet-Draft                    codcp                    December 2022
+Internet-Draft                    codcp                     January 2023
 
 
    D 
@@ -389,9 +389,9 @@ Internet-Draft                    codcp                    December 2022
 
 
 
-Homburg                   Expires 26 June 2023                  [Page 7]
+Homburg                   Expires 13 July 2023                  [Page 7]
 
-Internet-Draft                    codcp                    December 2022
+Internet-Draft                    codcp                     January 2023
 
 
       DANE record has a Certificate Usage Field.  For some values of
@@ -429,91 +429,36 @@ Internet-Draft                    codcp                    December 2022
       2
 
    TRANSPORT PROTOCOL
-      A DNS transport protocol idenfier.  The value 0 is used to specify
-      any transport implemented by server.
+      A DNS transport protocol identifier.  The value 0 is used to
+      specify any transport implemented by server.
 
    PRIORITY
       The priority of this transport relative to other transports.  The
       value 0 indicates the highest priority and 254 the lowest.  The
       value 255 is defined to mean that this protocol MUST NOT be used.
 
-   A new registry is need for transport protocols.  Initial values:
-
-   0  a default list of transports built into the proxy
-
-   1  unencrypted UDP , fallback to unencrypted TCP if the TC bit is set
-
-
-
-Homburg                   Expires 26 June 2023                  [Page 8]
-
-Internet-Draft                    codcp                    December 2022
-
-
-      in the reply
-
-   2  unencrypted without fallback
-
-   3  unencrypted TCP
-
-   4  DNS over TCP and TLS
-
-   5  DNS over HTTPS
-
-   6  DNS over QUIC
-
-   Priorities are take over all Proxy Control options in a DNS request.
+   Priorities are taken over all Proxy Control options in a DNS request.
    This allows the application to specify an explicit order (or the lack
    of order) among different upstream resolvers.
+
+
+
+
+
+Homburg                   Expires 13 July 2023                  [Page 8]
+
+Internet-Draft                    codcp                     January 2023
+
 
    For protocol 0 (the default list), all protocols that are explicitly
    listed in a Proxy Control option are excluded from the default list.
    In other words, when processing the default list, all explicitly
    listed protocols are excluded.
 
-5.3.  Domain Name
+   If this sub option is not present in a Proxy Control option, then the
+   proxy should assume protocol 0 at priority 128.
 
-       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-    0: |                      SUB-OPTION-CODE                          |
-       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-    2: |                     SUB-OPTION-LENGTH                         |
-       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-    4: ~                        DOMAIN NAME                            ~
-       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-
-   where
-
-   SUB-OPTION-CODE
-      To be decided
-
-   SUB-OPTION-LENGTH
-      Length of this sub-option excluding the SUB-OPTION-CODE and SUB-
-      OPTION-LENGTH fields
-
-   DOMAIN NAME
-      domain name for authentication or resolving IP addresses.  The
-      domain name is encoded in uncompressed DNS wire format.
-
-   If the option contains a domain name but no IP addresses (see
-   ipv4hints and ipv6hints below) then the proxy is expected to resolve
-   the name to addresses.  If only addresses are specified then the
-   proxy assumes that no name is known (though a PKIX certificate may
-
-
-
-Homburg                   Expires 26 June 2023                  [Page 9]
-
-Internet-Draft                    codcp                    December 2022
-
-
-   include an address literal in the subjectAltName).  If both a name
-   and address are specified then the proxy will use the specified
-   address and use the name for authentication.
-
-   The the option contains neither a domain name nor any IP addresses
-   then the application requests the resolvers known to the proxy.
-
-5.4.  SVC Parameter
+5.3.  SVC Parameter
 
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     0: |                      SUB-OPTION-CODE                          |
@@ -556,11 +501,44 @@ Internet-Draft                    codcp                    December 2022
 
 
 
-
-Homburg                   Expires 26 June 2023                 [Page 10]
+Homburg                   Expires 13 July 2023                  [Page 9]
 
-Internet-Draft                    codcp                    December 2022
+Internet-Draft                    codcp                     January 2023
 
+
+5.4.  Domain Name
+
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    0: |                      SUB-OPTION-CODE                          |
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    2: |                     SUB-OPTION-LENGTH                         |
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    4: ~                        DOMAIN NAME                            ~
+       +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+
+   where
+
+   SUB-OPTION-CODE
+      To be decided
+
+   SUB-OPTION-LENGTH
+      Length of this sub-option excluding the SUB-OPTION-CODE and SUB-
+      OPTION-LENGTH fields
+
+   DOMAIN NAME
+      domain name for authentication or resolving IP addresses.  The
+      domain name is encoded in uncompressed DNS wire format.
+
+   If the option contains a domain name but no IP addresses (ipv4hints
+   or ipv6hints) then the proxy is expected to resolve the name to
+   addresses.  If only addresses are specified then the proxy assumes
+   that no name is known (though a PKIX certificate may include an
+   address literal in the subjectAltName).  If both a name and addresses
+   are specified then the proxy will use the specified addresses to
+   reach the upstream resolver and use the name for authentication.
+
+   The the option contains neither a domain name nor any IP addresses
+   then the application requests the resolvers known to the proxy.
 
 5.5.  Interface Name
 
@@ -576,6 +554,13 @@ Internet-Draft                    codcp                    December 2022
 
    SUB-OPTION-CODE
       To be decided
+
+
+
+Homburg                   Expires 13 July 2023                 [Page 10]
+
+Internet-Draft                    codcp                     January 2023
+
 
    SUB-OPTION-LENGTH
       Length of this sub-option excluding the SUB-OPTION-CODE and SUB-
@@ -608,15 +593,7 @@ Internet-Draft                    codcp                    December 2022
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
 
    OPTION-CODE
-      To be decided
-
-
-
-
-Homburg                   Expires 26 June 2023                 [Page 11]
-
-Internet-Draft                    codcp                    December 2022
-
+      To be decided (TBD2)
 
    OPTION-LENGTH
       Length of this option excluding the OPTION-CODE and OPTION-LENGTH
@@ -625,6 +602,21 @@ Internet-Draft                    codcp                    December 2022
    Scope
       Scope of the source address of a request.  Scope can have the
       following values:
+
+
+
+
+
+
+
+
+
+
+
+Homburg                   Expires 13 July 2023                 [Page 11]
+
+Internet-Draft                    codcp                     January 2023
+
 
                             +=======+============+
                             | Value | Scope      |
@@ -666,15 +658,7 @@ Internet-Draft                    codcp                    December 2022
    where
 
    OPTION-CODE
-
-
-
-Homburg                   Expires 26 June 2023                 [Page 12]
-
-Internet-Draft                    codcp                    December 2022
-
-
-      To be decided
+      To be decided (TBD3)
 
    OPTION-LENGTH
       Length of this option excluding the OPTION-CODE and OPTION-LENGTH
@@ -682,6 +666,13 @@ Internet-Draft                    codcp                    December 2022
 
    ANCHORS-XML-LENGTH
       Length of ANCHORS-XML in network byte order
+
+
+
+Homburg                   Expires 13 July 2023                 [Page 12]
+
+Internet-Draft                    codcp                     January 2023
+
 
    ANCHORS-XML
       Trust anchors in XML format
@@ -721,21 +712,23 @@ Internet-Draft                    codcp                    December 2022
    first sends a probing query to verify that the proxy supports the
    PROXY CONTROL and PROXY SCOPE Options.
 
-
-
-
-
-Homburg                   Expires 26 June 2023                 [Page 13]
-
-Internet-Draft                    codcp                    December 2022
-
-
    This request queries "resolver.arpa" for SOA records.  The proxy MUST
    implement this as a Special Use Domain Name.  The actual response is
    not important.  The important part is that the proxy returns PROXY
    CONTROL and PROXY SCOPE Options as described in this document or sets
    the response code to BADPROXYPOLICY if it cannot meet specified
    policy.
+
+
+
+
+
+
+
+Homburg                   Expires 13 July 2023                 [Page 13]
+
+Internet-Draft                    codcp                     January 2023
+
 
 8.1.2.  Trust Anchor
 
@@ -781,9 +774,16 @@ Internet-Draft                    codcp                    December 2022
 
 
 
-Homburg                   Expires 26 June 2023                 [Page 14]
+
+
+
+
+
+
+
+Homburg                   Expires 13 July 2023                 [Page 14]
 
-Internet-Draft                    codcp                    December 2022
+Internet-Draft                    codcp                     January 2023
 
 
    If the proxy successfully connects to a recursive resolver and
@@ -837,9 +837,9 @@ Internet-Draft                    codcp                    December 2022
 
 
 
-Homburg                   Expires 26 June 2023                 [Page 15]
+Homburg                   Expires 13 July 2023                 [Page 15]
 
-Internet-Draft                    codcp                    December 2022
+Internet-Draft                    codcp                     January 2023
 
 
 10.  Security Considerations
@@ -863,15 +863,96 @@ Internet-Draft                    codcp                    December 2022
 
     Value   Name           Status     Reference
    ------- -------------- ---------- -----------
-    TBD     PROXY CONTROL  Standard   RFC xxxx
-    TBD     PROXY SCOPE    Standard   RFC xxxx
-    TBD     TRUST ANCHOR   Standard   RFC xxxx
+    TBD1    PROXY CONTROL  Standard   RFC xxxx
+    TBD2    PROXY SCOPE    Standard   RFC xxxx
+    TBD3    TRUST ANCHOR   Standard   RFC xxxx
 
    IANA has assigned the following Extended DNS Error code:
 
    INFO-CODE   Name             Purpose                       Reference
   ----------- ---------------- ----------------------------- -----------
    28          BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
+
+   This document requests IANA to create a new registry for Proxy
+   Control Sub Options in the group Domain Name System (DNS) Parameters.
+   Expert review shall be required to add new entries to the registry.
+
+   The initial contents of the Proxy Control Sub Options registry shall
+   be:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Homburg                   Expires 13 July 2023                 [Page 16]
+
+Internet-Draft                    codcp                     January 2023
+
+
+        +=========+============+======================+===========+
+        | Value   | Name       | Description          | Reference |
+        +=========+============+======================+===========+
+        | 0       |            | Reserved             |           |
+        +---------+------------+----------------------+-----------+
+        | 1       | SECCON     | Security Constraints | RFC xxxx  |
+        +---------+------------+----------------------+-----------+
+        | 2       | TRANSPRIO  | Transport Priority   | RFC xxxx  |
+        +---------+------------+----------------------+-----------+
+        | 3       | SVCPARAM   | SVC Parameter        | RFC xxxx  |
+        +---------+------------+----------------------+-----------+
+        | 4       | DOMAINNAME | Domain Name          | RFC xxxx  |
+        +---------+------------+----------------------+-----------+
+        | 5       | INFNAME    | Interface Name       | RFC xxxx  |
+        +---------+------------+----------------------+-----------+
+        | 6-65535 |            | Unassigned           |           |
+        +---------+------------+----------------------+-----------+
+
+                                  Table 2
+
+   This document also requests IANA to create a new registry for DNS
+   Transport Protocols in the group Domain Name System (DNS) Parameters.
+   An RFC shall be required to add new entries to the registry.
+
+    +=======+==========+==================================+===========+
+    | Value | Name     | Description                      | Reference |
+    +=======+==========+==================================+===========+
+    | 0     | DEFAULT  | default protocols                | RFC xxxx  |
+    +-------+----------+----------------------------------+-----------+
+    | 1     | Do53     | Unencrypted UDP, fallback to TCP | RFC xxxx  |
+    +-------+----------+----------------------------------+-----------+
+    | 2     | Do53-UDP | Unencrypted UDP, no fallback to  | RFC xxxx  |
+    |       |          | TCP                              |           |
+    +-------+----------+----------------------------------+-----------+
+    | 3     | Do53-TCP | Unencrypted TCP                  | RFC xxxx  |
+    +-------+----------+----------------------------------+-----------+
+    | 4     | DoT      | DNS over TLS                     | RFC xxxx  |
+    +-------+----------+----------------------------------+-----------+
+    | 5     | DoH      | DNS over HTTPS                   | RFC xxxx  |
+    +-------+----------+----------------------------------+-----------+
+    | 6     | DoQ      | DNS over QUIC                    | RFC xxxx  |
+    +-------+----------+----------------------------------+-----------+
+    | 7-255 |          | Unassigned                       |           |
+    +-------+----------+----------------------------------+-----------+
+
+                                  Table 3
+
+
+
+
+
+Homburg                   Expires 13 July 2023                 [Page 17]
+
+Internet-Draft                    codcp                     January 2023
+
 
 12.  Acknowledgements
 
@@ -880,87 +961,87 @@ Internet-Draft                    codcp                    December 2022
 
 13.  Normative References
 
-   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
-              Requirement Levels", BCP 14, RFC 2119,
+   [RFC2119]  Bradner, S. and RFC Publisher, "Key words for use in RFCs
+              to Indicate Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
               <https://www.rfc-editor.org/info/rfc2119>.
 
-   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
-              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
-              May 2017, <https://www.rfc-editor.org/info/rfc8174>.
+   [RFC8174]  Leiba, B. and RFC Publisher, "Ambiguity of Uppercase vs
+              Lowercase in RFC 2119 Key Words", BCP 14, RFC 8174,
+              DOI 10.17487/RFC8174, May 2017,
+              <https://www.rfc-editor.org/info/rfc8174>.
 
 14.  Informative References
 
-
-
-Homburg                   Expires 26 June 2023                 [Page 16]
-
-Internet-Draft                    codcp                    December 2022
-
-
-   [RFC1034]  Mockapetris, P., "Domain names - concepts and facilities",
-              STD 13, RFC 1034, DOI 10.17487/RFC1034, November 1987,
+   [RFC1034]  Mockapetris, P. and RFC Publisher, "Domain names -
+              concepts and facilities", STD 13, RFC 1034,
+              DOI 10.17487/RFC1034, November 1987,
               <https://www.rfc-editor.org/info/rfc1034>.
 
-   [RFC1035]  Mockapetris, P., "Domain names - implementation and
-              specification", STD 13, RFC 1035, DOI 10.17487/RFC1035,
-              November 1987, <https://www.rfc-editor.org/info/rfc1035>.
+   [RFC1035]  Mockapetris, P. and RFC Publisher, "Domain names -
+              implementation and specification", STD 13, RFC 1035,
+              DOI 10.17487/RFC1035, November 1987,
+              <https://www.rfc-editor.org/info/rfc1035>.
 
-   [RFC3493]  Gilligan, R., Thomson, S., Bound, J., McCann, J., and W.
-              Stevens, "Basic Socket Interface Extensions for IPv6",
-              RFC 3493, DOI 10.17487/RFC3493, February 2003,
+   [RFC3493]  Gilligan, R., Thomson, S., Bound, J., McCann, J., Stevens,
+              W., and RFC Publisher, "Basic Socket Interface Extensions
+              for IPv6", RFC 3493, DOI 10.17487/RFC3493, February 2003,
               <https://www.rfc-editor.org/info/rfc3493>.
 
-   [RFC5011]  StJohns, M., "Automated Updates of DNS Security (DNSSEC)
-              Trust Anchors", STD 74, RFC 5011, DOI 10.17487/RFC5011,
-              September 2007, <https://www.rfc-editor.org/info/rfc5011>.
+   [RFC5011]  StJohns, M. and RFC Publisher, "Automated Updates of DNS
+              Security (DNSSEC) Trust Anchors", STD 74, RFC 5011,
+              DOI 10.17487/RFC5011, September 2007,
+              <https://www.rfc-editor.org/info/rfc5011>.
 
    [RFC5280]  Cooper, D., Santesson, S., Farrell, S., Boeyen, S.,
-              Housley, R., and W. Polk, "Internet X.509 Public Key
-              Infrastructure Certificate and Certificate Revocation List
-              (CRL) Profile", RFC 5280, DOI 10.17487/RFC5280, May 2008,
+              Housley, R., Polk, W., and RFC Publisher, "Internet X.509
+              Public Key Infrastructure Certificate and Certificate
+              Revocation List (CRL) Profile", RFC 5280,
+              DOI 10.17487/RFC5280, May 2008,
               <https://www.rfc-editor.org/info/rfc5280>.
 
-   [RFC5625]  Bellis, R., "DNS Proxy Implementation Guidelines",
-              BCP 152, RFC 5625, DOI 10.17487/RFC5625, August 2009,
-              <https://www.rfc-editor.org/info/rfc5625>.
 
-   [RFC6891]  Damas, J., Graff, M., and P. Vixie, "Extension Mechanisms
-              for DNS (EDNS(0))", STD 75, RFC 6891,
-              DOI 10.17487/RFC6891, April 2013,
+
+
+
+
+Homburg                   Expires 13 July 2023                 [Page 18]
+
+Internet-Draft                    codcp                     January 2023
+
+
+   [RFC5625]  Bellis, R. and RFC Publisher, "DNS Proxy Implementation
+              Guidelines", BCP 152, RFC 5625, DOI 10.17487/RFC5625,
+              August 2009, <https://www.rfc-editor.org/info/rfc5625>.
+
+   [RFC6891]  Damas, J., Graff, M., Vixie, P., and RFC Publisher,
+              "Extension Mechanisms for DNS (EDNS(0))", STD 75,
+              RFC 6891, DOI 10.17487/RFC6891, April 2013,
               <https://www.rfc-editor.org/info/rfc6891>.
 
-   [RFC7540]  Belshe, M., Peon, R., and M. Thomson, Ed., "Hypertext
-              Transfer Protocol Version 2 (HTTP/2)", RFC 7540,
-              DOI 10.17487/RFC7540, May 2015,
+   [RFC7540]  Belshe, M., Peon, R., Thomson, M., Ed., and RFC Publisher,
+              "Hypertext Transfer Protocol Version 2 (HTTP/2)",
+              RFC 7540, DOI 10.17487/RFC7540, May 2015,
               <https://www.rfc-editor.org/info/rfc7540>.
 
    [RFC7858]  Hu, Z., Zhu, L., Heidemann, J., Mankin, A., Wessels, D.,
-              and P. Hoffman, "Specification for DNS over Transport
-              Layer Security (TLS)", RFC 7858, DOI 10.17487/RFC7858, May
-              2016, <https://www.rfc-editor.org/info/rfc7858>.
+              Hoffman, P., and RFC Publisher, "Specification for DNS
+              over Transport Layer Security (TLS)", RFC 7858,
+              DOI 10.17487/RFC7858, May 2016,
+              <https://www.rfc-editor.org/info/rfc7858>.
 
-   [RFC7958]  Abley, J., Schlyter, J., Bailey, G., and P. Hoffman,
-              "DNSSEC Trust Anchor Publication for the Root Zone",
-              RFC 7958, DOI 10.17487/RFC7958, August 2016,
+   [RFC7958]  Abley, J., Schlyter, J., Bailey, G., Hoffman, P., and RFC
+              Publisher, "DNSSEC Trust Anchor Publication for the Root
+              Zone", RFC 7958, DOI 10.17487/RFC7958, August 2016,
               <https://www.rfc-editor.org/info/rfc7958>.
 
+   [RFC8484]  Hoffman, P., McManus, P., and RFC Publisher, "DNS Queries
+              over HTTPS (DoH)", RFC 8484, DOI 10.17487/RFC8484, October
+              2018, <https://www.rfc-editor.org/info/rfc8484>.
 
-
-
-
-Homburg                   Expires 26 June 2023                 [Page 17]
-
-Internet-Draft                    codcp                    December 2022
-
-
-   [RFC8484]  Hoffman, P. and P. McManus, "DNS Queries over HTTPS
-              (DoH)", RFC 8484, DOI 10.17487/RFC8484, October 2018,
-              <https://www.rfc-editor.org/info/rfc8484>.
-
-   [RFC9000]  Iyengar, J., Ed. and M. Thomson, Ed., "QUIC: A UDP-Based
-              Multiplexed and Secure Transport", RFC 9000,
-              DOI 10.17487/RFC9000, May 2021,
+   [RFC9000]  Iyengar, J., Ed., Thomson, M., Ed., and RFC Publisher,
+              "QUIC: A UDP-Based Multiplexed and Secure Transport",
+              RFC 9000, DOI 10.17487/RFC9000, May 2021,
               <https://www.rfc-editor.org/info/rfc9000>.
 
 Appendix A.  Change history
@@ -972,10 +1053,18 @@ Appendix A.  Change history
       -  Renamed to draft-homburg-dnsop-codcp
       -  IANA section with allocated code point for BADPROXYPOLICY
       -  Proxy Control Option rewritten to be TLV-based
+      -  Two new registries for sub-options and for DNS transports
 
    *  draft-homburg-add-codcp-00
 
       -  Initial version
+
+
+
+Homburg                   Expires 13 July 2023                 [Page 19]
+
+Internet-Draft                    codcp                     January 2023
+
 
 Author's Address
 
@@ -1005,4 +1094,27 @@ Author's Address
 
 
 
-Homburg                   Expires 26 June 2023                 [Page 18]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Homburg                   Expires 13 July 2023                 [Page 20]

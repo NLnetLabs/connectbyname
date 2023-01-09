@@ -189,7 +189,7 @@ where
 {newline="true"}
 OPTION-CODE
 
-: To be decided
+: To be decided (TBD1)
 
 OPTION-LENGTH
 
@@ -213,7 +213,7 @@ where
 {newline="true"}
 SUB-OPTION-CODE
 
-: To be decided
+: 16-bit identifier for the sub-option
 
 SUB-OPTION-LENGTH
 
@@ -231,7 +231,7 @@ option is malformed, it returns this error.
 If the proxy returns a BADPROXYPOLICY error, the proxy MAY include
 a PROXY CONTROL Option that lists what the proxy can do. For example,
 if authenticated encryption is not possible, but unauthenticated is,
-then the proxy may include an option that has the UA bit set.
+then the proxy may include an option show that.
 
 ## Security Constraints Sub-option
 
@@ -375,7 +375,7 @@ SUB-OPTION-LENGTH
 
 TRANSPORT PROTOCOL
 
-: A DNS transport protocol idenfier. The value 0 is used to specify any
+: A DNS transport protocol identifier. The value 0 is used to specify any
   transport implemented by server.
 
 PRIORITY
@@ -384,38 +384,7 @@ PRIORITY
   indicates the highest priority and 254 the lowest. The value 255 is
   defined to mean that this protocol MUST NOT be used.
 
-A new registry is need for transport protocols. Initial values:
-
-0
-
-: a default list of transports built into the proxy
-
-1
-
-: unencrypted UDP , fallback to unencrypted TCP if the TC bit is set in the
-reply
-
-2
-
-: unencrypted without fallback
-
-3
-
-: unencrypted TCP
-
-4
-
-: DNS over TCP and TLS
-
-5
-
-: DNS over HTTPS
-
-6
-
-: DNS over QUIC
-
-Priorities are take over all Proxy Control options in a DNS request. This
+Priorities are taken over all Proxy Control options in a DNS request. This
 allows the application to specify an explicit order (or the lack of order)
 among different upstream resolvers.
 
@@ -424,46 +393,8 @@ listed in a Proxy Control option are excluded from the default list.
 In other words, when processing the default list, all explicitly listed
 protocols are excluded.
 
-## Domain Name
-
-~~~
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   0: |                      SUB-OPTION-CODE                          |
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   2: |                     SUB-OPTION-LENGTH                         |
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-   4: ~                        DOMAIN NAME                            ~
-      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-~~~
-
-where
-
-{newline="true"}
-SUB-OPTION-CODE
-
-: To be decided
-
-SUB-OPTION-LENGTH
-
-: Length of this sub-option excluding the SUB-OPTION-CODE and
-  SUB-OPTION-LENGTH fields
-
-DOMAIN NAME
-
-: domain name for authentication or resolving IP addresses. The domain name
-is encoded in uncompressed DNS wire format.
-
-If the option contains a domain name but no IP addresses (see ipv4hints and
-ipv6hints below) then the
-proxy is expected to resolve the name to addresses. If only addresses
-are specified then the proxy assumes that no name is known (though
-a PKIX certificate may include an address literal in the subjectAltName).
-If both a name and address are specified then the proxy will use the
-specified address and use the name for authentication.
-
-The the option contains neither a domain name nor any IP addresses
-then the application requests the resolvers known to
-the proxy.
+If this sub option is not present in a Proxy Control option, then the proxy
+should assume protocol 0 at priority 128.
 
 ## SVC Parameter
 
@@ -507,8 +438,49 @@ Other relevant SvcParamKeys from [draft-ietf-dnsop-svcb-https] are 'mandatory',
 'ech', 'ipv4hint' and 'ipv6hint'.
 
 Instead of defining new sub-options to store IPv4 and IPv6 address, this
-document re-uses the ipv4hints and ipv6hints. However the semantics are redefined to be that these option and not hints, be are the actual addresses that
-are to be used.
+document re-uses the ipv4hints and ipv6hints. However the semantics are
+redefined to be that these option and not hints, be are the actual addresses
+that are to be used.
+
+## Domain Name
+
+~~~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   0: |                      SUB-OPTION-CODE                          |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   2: |                     SUB-OPTION-LENGTH                         |
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+   4: ~                        DOMAIN NAME                            ~
+      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+~~~
+
+where
+
+{newline="true"}
+SUB-OPTION-CODE
+
+: To be decided
+
+SUB-OPTION-LENGTH
+
+: Length of this sub-option excluding the SUB-OPTION-CODE and
+  SUB-OPTION-LENGTH fields
+
+DOMAIN NAME
+
+: domain name for authentication or resolving IP addresses. The domain name
+is encoded in uncompressed DNS wire format.
+
+If the option contains a domain name but no IP addresses (ipv4hints or
+ipv6hints) then the proxy is expected to resolve the name to addresses. If
+only addresses are specified then the proxy assumes that no name is known
+(though a PKIX certificate may include an address literal in the
+subjectAltName). If both a name and addresses are specified then the proxy
+will use the specified addresses to reach the upstream resolver and use the
+name for authentication.
+
+The the option contains neither a domain name nor any IP addresses
+then the application requests the resolvers known to the proxy.
 
 ## Interface Name
 
@@ -566,7 +538,7 @@ name can also be an interface index expressed as a decimal string.
 {newline="true"}
 OPTION-CODE
 
-: To be decided
+: To be decided (TBD2)
 
 OPTION-LENGTH
 
@@ -613,7 +585,7 @@ where
 {newline="true"}
 OPTION-CODE
 
-: To be decided
+: To be decided (TBD3)
 
 OPTION-LENGTH
 
@@ -770,15 +742,46 @@ IANA has assigned the following DNS EDNS0 option codes:
 
      Value   Name           Status     Reference
     ------- -------------- ---------- -----------
-     TBD     PROXY CONTROL  Standard   RFC xxxx
-     TBD     PROXY SCOPE    Standard   RFC xxxx
-     TBD     TRUST ANCHOR   Standard   RFC xxxx
+     TBD1    PROXY CONTROL  Standard   RFC xxxx
+     TBD2    PROXY SCOPE    Standard   RFC xxxx
+     TBD3    TRUST ANCHOR   Standard   RFC xxxx
 
   IANA has assigned the following Extended DNS Error code:
 
      INFO-CODE   Name             Purpose                       Reference
     ----------- ---------------- ----------------------------- -----------
      28          BADPROXYPOLICY   Unable to conform to policy   RFC xxxx
+
+This document requests IANA to create a new registry for Proxy Control
+Sub Options in the group Domain Name System (DNS) Parameters.
+Expert review shall be required to add new entries to the registry.
+
+The initial contents of the Proxy Control Sub Options registry shall be:
+
+ Value | Name       | Description          | Reference
+-------|------------|----------------------|-----------
+ 0     |            | Reserved
+ 1     | SECCON     | Security Constraints | RFC xxxx
+ 2     | TRANSPRIO  | Transport Priority   | RFC xxxx
+ 3     | SVCPARAM   | SVC Parameter        | RFC xxxx
+ 4     | DOMAINNAME | Domain Name          | RFC xxxx
+ 5     | INFNAME    | Interface Name       | RFC xxxx
+ 6-65535 |     | Unassigned
+
+This document also requests IANA to create a new registry for DNS Transport
+Protocols in the group Domain Name System (DNS) Parameters.
+An RFC shall be required to add new entries to the registry.
+
+ Value | Name     | Description                         | Reference
+-------|----------|-------------------------------------|-----------
+ 0     | DEFAULT  | default protocols                   | RFC xxxx
+ 1     | Do53     | Unencrypted UDP, fallback to TCP    | RFC xxxx
+ 2     | Do53-UDP | Unencrypted UDP, no fallback to TCP | RFC xxxx
+ 3     | Do53-TCP | Unencrypted TCP                     | RFC xxxx
+ 4     | DoT      | DNS over TLS                        | RFC xxxx
+ 5     | DoH      | DNS over HTTPS                      | RFC xxxx
+ 6     | DoQ      | DNS over QUIC                       | RFC xxxx
+ 7-255 |          | Unassigned                          |
 
 # Acknowledgements
 
@@ -795,6 +798,7 @@ Many thanks to Yorgos Thessalonikefs and Willem Toorop for their feedback.
   - Renamed to draft-homburg-dnsop-codcp
   - IANA section with allocated code point for BADPROXYPOLICY
   - Proxy Control Option rewritten to be TLV-based
+  - Two new registries for sub-options and for DNS transports
 
 * draft-homburg-add-codcp-00
 
